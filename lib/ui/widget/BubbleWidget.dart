@@ -25,18 +25,20 @@ class _BubbleWidgetState extends State<BubbleWidget> {
     // TODO: implement initState
     super.initState();
     _msgType = message.userId == Constant.id;
-    print(_msgType);
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(8.dp),
-      child: Row(
-        // verticalDirection: VerticalDirection.up,
-        mainAxisAlignment:
+      child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: SizeConfig.screenWidth / 5 * 3),
+          child: Row(
+            // verticalDirection: VerticalDirection.up,
+            mainAxisAlignment:
             _msgType ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: _buildRow(),
+            children: _buildRow(),
+          ) ,
       ),
     );
   }
@@ -65,16 +67,12 @@ class _BubbleWidgetState extends State<BubbleWidget> {
       decoration: BoxDecoration(
           color: _msgType ? Colors.blue : Colors.blueGrey[200],
           boxShadow: [
-            BoxShadow(
-                blurRadius: 4, spreadRadius: 0.1, color: Colors.grey)
+            BoxShadow(blurRadius: 4, spreadRadius: 0.1, color: Colors.grey)
           ],
           borderRadius: _msgType ? sendRadius : receiveRadius),
       padding:
-          EdgeInsets.only(left: 8.dp, right: 8.dp, top: 4.dp, bottom: 4.dp),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: SizeConfig.screenWidth / 4 * 3),
-        child: Text.rich(TextSpan(text: _convertStringToRichText())),
-      ),
+      EdgeInsets.only(left: 8.dp, right: 8.dp, top: 4.dp, bottom: 4.dp),
+      child: Text.rich(TextSpan(text: _convertStringToRichText())),
     );
   }
 

@@ -1,11 +1,13 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_web/config/app_config.dart';
+import 'package:get_it/get_it.dart';
 
 class MyHttpClient {
   static Dio _client;
   static Dio getHttpClient() {
     if (_client == null) {
       _client = Dio();
-      _client.options..baseUrl = "http://127.0.0.1/api/v1/";
+      _client.options..baseUrl = GetIt.instance<AppConfig>().apiHost;
       _client.interceptors
         ..add(LogInterceptor(
           requestHeader: true,

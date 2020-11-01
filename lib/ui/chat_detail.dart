@@ -2,21 +2,34 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/model/entity.dart';
+import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/widget/BubbleWidget.dart';
 import 'package:flutter_web/utils/Constant.dart';
 import 'package:flutter_web/utils/SizeConfig.dart';
+import 'package:get_it/get_it.dart';
 
-class ChatPage extends StatefulWidget {
+// ignore: must_be_immutable
+class ChatDetailPage extends StatefulWidget {
+  String token;
+
+  ChatDetailPage({this.token});
+
   @override
-  _ChatPageState createState() => _ChatPageState();
+  _ChatDetailPageState createState() => _ChatDetailPageState();
 }
 
-class _ChatPageState extends State<ChatPage> {
+class _ChatDetailPageState extends State<ChatDetailPage> {
+  WebSocketManager socketManager;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _fetchData();
+    socketManager = GetIt.instance<WebSocketManager>();
+    socketManager.connectToServer(widget.token).then((bool) => {
+          if (bool) {socketManager.channel.sink.add("ASDASDASDA")} else {}
+        });
   }
 
   @override
@@ -89,7 +102,10 @@ class _ChatPageState extends State<ChatPage> {
           controller: _inputController,
         )),
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            socketManager.sendMessage({"msg": _inputController.value.text});
+            _inputController.clear();
+          },
           icon: Icon(Icons.send),
         )
       ],

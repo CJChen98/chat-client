@@ -102,7 +102,7 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         message = Entity().fromJson(response.data);
         if (message.code == 200) {
-          Navigator.of(context).pushNamed("Chat");
+          Navigator.of(context).pushNamed("Chat",arguments: message.msg);
         }
       }
     });
