@@ -1,0 +1,9 @@
+{
+    "CreatedAt": "2020-11-02T09:20:00+08:00",
+    "UpdatedAt": "2020-11-02T09:20:00+08:00",
+    "DeletedAt": "0001-01-01T00:00:00Z",
+    "ID": 1,
+    "username": "chen1",
+    "password": "",
+    "avatar_path": ""
+}

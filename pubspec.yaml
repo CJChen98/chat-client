@@ -21,6 +21,7 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  json_annotation: ^2.0.0 
   get_it: ^3.0.3
   web_socket_channel: any
   dio: any
@@ -33,6 +34,9 @@ dependencies:
   cupertino_icons: ^1.0.0
 
 dev_dependencies:
+  json_model: any
+  build_runner: ^1.0.0
+  json_serializable: ^2.0.0
   flutter_test:
     sdk: flutter
 

@@ -28,7 +28,7 @@ void main() {
     }
   } catch (e) {
     log(e.toString());
-    appConfig.isWebPlatform =true;
+    appConfig.isWebPlatform = true;
   }
   if (window.physicalSize.aspectRatio > 1) {
     appConfig.isBigScreen = true;
@@ -48,7 +48,9 @@ class MyApp extends StatelessWidget {
         "Home": (context) => MyHomePage(
               title: ModalRoute.of(context).settings.arguments,
             ),
-        "Chat": (context) => ChatDetailPage()
+        "Chat": (context) => ChatDetailPage(
+              chat: ModalRoute.of(context).settings.arguments,
+            )
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,

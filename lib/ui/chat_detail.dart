@@ -1,18 +1,19 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_web/model/entity.dart';
+import 'package:flutter_web/models/chat.dart';
+import 'package:flutter_web/models/message.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
-import 'package:flutter_web/ui/widget/BubbleWidget.dart';
-import 'package:flutter_web/utils/Constant.dart';
-import 'package:flutter_web/utils/SizeConfig.dart';
+import 'package:flutter_web/ui/widget/bubble_widget.dart';
+import 'package:flutter_web/utils/constant.dart';
+import 'package:flutter_web/utils/size_config.dart';
 import 'package:get_it/get_it.dart';
 
 // ignore: must_be_immutable
 class ChatDetailPage extends StatefulWidget {
-  String token;
+  Chat chat;
 
-  ChatDetailPage({this.token});
+  ChatDetailPage({this.chat});
 
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
@@ -27,9 +28,18 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.initState();
     _fetchData();
     socketManager = GetIt.instance<WebSocketManager>();
-    socketManager.connectToServer(widget.token).then((bool) => {
-          if (bool) {socketManager.channel.sink.add("ASDASDASDA")} else {}
-        });
+    socketManager.connectToServer(widget.chat.token, (message) {
+      setState(() {
+        _messages.add(message);
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      });
+    }).then((bool) => {});
+  }
+
+  @override
+  void dispose() {
+    socketManager.disconnect();
+    super.dispose();
   }
 
   @override
@@ -103,7 +113,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         )),
         IconButton(
           onPressed: () {
-            socketManager.sendMessage({"msg": _inputController.value.text});
+            var message = Message()
+              ..content = _inputController.value.text
+              ..room_id = 1
+              ..username = widget.chat.data.user.username
+              ..user_id = widget.chat.data.user.ID;
+
+            socketManager.sendMessage(message.toJson());
             _inputController.clear();
           },
           icon: Icon(Icons.send),
@@ -113,10 +129,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   List<Message> _messages = List<Message>();
+  var _scrollController = ScrollController();
 
   _messageList() {
     return Expanded(
         child: ListView.builder(
+      controller: _scrollController,
       itemCount:
           _messages == null ?? _messages.length == 0 ? 0 : _messages.length,
       itemBuilder: (context, index) {
@@ -136,7 +154,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
     _messages.add(Message()
       ..content = Constant.text2
-      ..userId = Constant.id);
+      ..user_id = widget.chat.data.user.ID);
     while (_messages.length < 2) {
       var message = Message()
         ..content = _messages.length % 2 == 0 ? Constant.text1 : Constant.text2;

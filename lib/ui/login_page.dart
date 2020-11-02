@@ -1,12 +1,14 @@
 import 'dart:developer';
 import 'dart:io';
-import 'package:flutter_web/model/entity.dart';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web/network/HttpClient.dart';
-import 'package:flutter_web/utils/SizeConfig.dart';
+import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/models/chat.dart';
+import 'package:flutter_web/network/http_client.dart';
+import 'package:flutter_web/utils/size_config.dart';
+import 'package:get_it/get_it.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -97,12 +99,13 @@ class _LoginPageState extends State<LoginPage> {
       "username": _usernameController.text.trim(),
       "password": _passwordController.text.trim()
     };
-    Entity message;
+    Chat chat;
     MyHttpClient.POST("/login", data).then((Response response) {
       if (response.statusCode == 200) {
-        message = Entity().fromJson(response.data);
-        if (message.code == 200) {
-          Navigator.of(context).pushNamed("Chat",arguments: message.msg);
+        chat = Chat.fromJson(response.data);
+        if (chat.code == 200) {
+          GetIt.instance<AppConfig>().CurrentUserID=chat.data.user.ID;
+          Navigator.of(context).pushNamed("Chat", arguments: chat);
         }
       }
     });

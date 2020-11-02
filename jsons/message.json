@@ -1,0 +1,12 @@
+{
+  "CreatedAt": "0001-01-01T00:00:00Z",
+  "UpdatedAt": "0001-01-01T00:00:00Z",
+  "DeletedAt": "0001-01-01T00:00:00Z",
+  "ID": 0,
+  "user_id": 0,
+  "username": "sdasdadasd",
+  "to_user_id": 0,
+  "room_id": 0,
+  "content": "",
+  "image_url": ""
+}
