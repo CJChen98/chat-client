@@ -1,11 +1,17 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/models/chat.dart';
+import 'package:flutter_web/models/index.dart';
 import 'package:flutter_web/models/message.dart';
+import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/widget/bubble_widget.dart';
-import 'package:flutter_web/utils/constant.dart';
 import 'package:flutter_web/utils/size_config.dart';
 import 'package:get_it/get_it.dart';
 
@@ -28,10 +34,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     super.initState();
     _fetchData();
     socketManager = GetIt.instance<WebSocketManager>();
-    socketManager.connectToServer(widget.chat.token, (message) {
+    socketManager.connectToServer(GetIt.instance<AppConfig>().token, (message) {
       setState(() {
         _messages.add(message);
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        Timer(
+            Duration(milliseconds: 1000),
+            () => {
+                  _scrollController.animateTo(
+                      _scrollController.position.maxScrollExtent,
+                      duration: Duration(milliseconds: 500),
+                      curve: Curves.ease)
+                });
       });
     }).then((bool) => {});
   }
@@ -114,12 +127,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         IconButton(
           onPressed: () {
             var message = Message()
+              ..username = widget.chat.data.user.username
               ..content = _inputController.value.text
               ..room_id = 1
-              ..username = widget.chat.data.user.username
               ..user_id = widget.chat.data.user.ID;
-
-            socketManager.sendMessage(message.toJson());
+            socketManager.sendMessage(json.encode(message));
             _inputController.clear();
           },
           icon: Icon(Icons.send),
@@ -134,35 +146,51 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   _messageList() {
     return Expanded(
         child: ListView.builder(
+      physics: BouncingScrollPhysics(),
       controller: _scrollController,
       itemCount:
           _messages == null ?? _messages.length == 0 ? 0 : _messages.length,
       itemBuilder: (context, index) {
-        return BubbleWidget(_messages[index]);
+        return BubbleWidget(_messages.elementAt(index));
       },
     ));
   }
 
   _fetchData() async {
-    while (_messages.length < 2) {
-      var message = Message()
-        ..content = _messages.length % 2 == 0 ? Constant.text1 : Constant.text2;
-      setState(() {
-        _messages.add(message);
-      });
-      Future.delayed(Duration(seconds: 30), () => "fetch data");
-    }
-    _messages.add(Message()
-      ..content = Constant.text2
-      ..user_id = widget.chat.data.user.ID);
-    while (_messages.length < 2) {
-      var message = Message()
-        ..content = _messages.length % 2 == 0 ? Constant.text1 : Constant.text2;
-      setState(() {
-        _messages.add(message);
-      });
-      Future.delayed(Duration(seconds: 30), () => "fetch data");
-    }
+    var httpManager = GetIt.instance<HttpManager>();
+    var parameters = {"kind": "room_msg", "id": 1};
+    httpManager.GET("/find/",
+        token: GetIt.instance<AppConfig>().token,
+        parameters: parameters, onSuccess: (data) {
+      Chat chat;
+      chat = Chat.fromJson(data);
+      if (chat.code == 200) {
+        setState(() {
+          _messages = chat.data.messages;
+        });
+      }
+    }, onError: (error) {
+      log(error);
+    });
+    // while (_messages.length < 2) {
+    //   var message = Message()
+    //     ..content = _messages.length % 2 == 0 ? Constant.text1 : Constant.text2;
+    //   setState(() {
+    //     _messages.add(message);
+    //   });
+    //   Future.delayed(Duration(seconds: 30), () => "fetch data");
+    // }
+    // _messages.add(Message()
+    //   ..content = Constant.text2
+    //   ..user_id = widget.chat.data.user.ID);
+    // while (_messages.length < 2) {
+    //   var message = Message()
+    //     ..content = _messages.length % 2 == 0 ? Constant.text1 : Constant.text2;
+    //   setState(() {
+    //     _messages.add(message);
+    //   });
+    //   Future.delayed(Duration(seconds: 30), () => "fetch data");
+    // }
   }
 
   _main() {

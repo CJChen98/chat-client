@@ -2,7 +2,8 @@ class AppConfig {
   bool isBigScreen;
   Enviroment env = Enviroment.LOCAL;
   bool isWebPlatform = false;
-  num CurrentUserID;
+  num currentUserID;
+  String token;
   String get apiHost {
     switch (env) {
       case Enviroment.LOCAL:

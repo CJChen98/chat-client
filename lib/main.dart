@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
 import 'package:flutter_web/ui/login_page.dart';
@@ -12,8 +13,9 @@ import 'package:flutter_web/ui/myhome_page.dart';
 import 'package:get_it/get_it.dart';
 
 void main() {
-  GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(AppConfig());
+  GetIt.instance.registerSingleton(WebSocketManager());
+  GetIt.instance.registerSingleton(HttpManager());
   var appConfig = GetIt.instance<AppConfig>();
   try {
     if (Platform.isAndroid || Platform.isIOS) {
