@@ -5,32 +5,17 @@ import 'package:flutter_web/models/message.dart';
 import 'package:flutter_web/utils/size_config.dart';
 import 'package:get_it/get_it.dart';
 
-class BubbleWidget extends StatefulWidget {
+class BubbleWidget extends StatelessWidget {
   Message message;
   AppConfig appConfig = GetIt.instance<AppConfig>();
 
   BubbleWidget(this.message);
 
-  @override
-  _BubbleWidgetState createState() => _BubbleWidgetState(message);
-}
-
-class _BubbleWidgetState extends State<BubbleWidget> {
-  Message message;
-
-  _BubbleWidgetState(this.message);
-
   bool _isMyMessage;
 
   @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _isMyMessage = message.user_id == widget.appConfig.currentUserID;
-  }
-
-  @override
   Widget build(BuildContext context) {
+    _isMyMessage = message.user_id == appConfig.currentUserID;
     return Container(
       padding: EdgeInsets.all(8.dp),
       child: Row(
@@ -49,7 +34,8 @@ class _BubbleWidgetState extends State<BubbleWidget> {
 
   _bubbleColumn() {
     return Column(
-      crossAxisAlignment: _isMyMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+      crossAxisAlignment:
+          _isMyMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
       children: <Widget>[
         Text(
           message.username,
