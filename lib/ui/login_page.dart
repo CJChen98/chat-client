@@ -103,7 +103,7 @@ class _LoginPageState extends State<LoginPage> {
       Chat chat;
       chat =Chat.fromJson(data);
       if(chat.code == 200){
-        GetIt.instance<AppConfig>()..token =chat.token??''
+        GetIt.instance<AppConfig>()..token =chat.token
         ..currentUserID=chat.data.user.ID;
         Navigator.of(context).pushNamed("Chat",arguments: chat);
       }

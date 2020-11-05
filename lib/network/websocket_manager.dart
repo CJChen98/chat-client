@@ -13,8 +13,8 @@ class WebSocketManager {
       String token, {Function(Message message) onSuccess,Function onError}) async {
     var appConfig = GetIt.instance<AppConfig>();
     var host = appConfig.apiHost;
-    debugPrint("向服务器 $host 发起ws请求");
-    Uri uri = Uri.parse("ws://${host.substring(7)}ws/?token=$token");
+    Uri uri = Uri.parse("wss://${host.substring(8)}/ws/?token=$token");
+    debugPrint("向$uri 发起请求");
     channel = WebSocketChannel.connect(uri);
     channel.stream.listen((message) {
       debugPrint("收到服务器的消息: ${message.toString()}");

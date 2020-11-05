@@ -10,7 +10,7 @@ class AppConfig {
         return "http://192.168.3.217/api/v1/";
       case Enviroment.DEV:
       case Enviroment.PROD:
-        return "http://chitanda.cn/api/v1";
+        return "https://api.chitanda.cn";
     }
   }
 }

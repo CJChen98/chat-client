@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
@@ -14,9 +15,10 @@ import 'package:get_it/get_it.dart';
 
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
+  var appConfig = GetIt.instance<AppConfig>();
+  appConfig.env=Enviroment.DEV;
   GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(HttpManager());
-  var appConfig = GetIt.instance<AppConfig>();
   try {
     if (Platform.isAndroid || Platform.isIOS) {
       SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
@@ -45,7 +47,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Flutter Chat',
       routes: {
         "Home": (context) => MyHomePage(
               title: ModalRoute.of(context).settings.arguments,
