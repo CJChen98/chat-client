@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
@@ -9,6 +8,7 @@ import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/utils/size_config.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -93,24 +93,32 @@ class _LoginPageState extends State<LoginPage> {
             borderRadius: BorderRadius.all(Radius.circular(35))),
         child: Icon(Icons.keyboard_arrow_right));
   }
+
   _doLogin() async {
     var httpManager = GetIt.instance<HttpManager>();
     var data = {
       "username": _usernameController.text.trim(),
       "password": _passwordController.text.trim()
     };
-    httpManager.POST("/login",data: data,onSuccess: (data){
+    httpManager.POST("/login", data: data, onSuccess: (data) {
       Chat chat;
-      chat =Chat.fromJson(data);
-      if(chat.code == 200){
-        GetIt.instance<AppConfig>()..token =chat.token
-        ..currentUserID=chat.data.user.ID;
-        Navigator.of(context).pushNamed("Chat",arguments: chat);
+      chat = Chat.fromJson(data);
+      if (chat.code == 200) {
+        _saveUserInfo(chat.token);
+        GetIt.instance<AppConfig>()
+          ..username = chat.data.user.username
+          ..token = chat.token
+          ..currentUserID = chat.data.user.ID;
+        Navigator.of(context).pushReplacementNamed("Chat", arguments: chat);
       }
-    },onError: (error){
+    }, onError: (error) {
       log(error);
     });
+  }
 
+  _saveUserInfo(String token) async {
+    var spf = await SharedPreferences.getInstance();
+    spf.setString("token", token);
   }
 
   _usernameInput() {

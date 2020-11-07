@@ -13,10 +13,12 @@ import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/widget/bubble_widget.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class ChatDetailPage extends StatefulWidget {
   Chat chat;
+  String token;
 
   ChatDetailPage({this.chat});
 
@@ -25,6 +27,7 @@ class ChatDetailPage extends StatefulWidget {
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
+  String token= GetIt.instance<AppConfig>().token;
   WebSocketManager socketManager;
   int page = 0;
   List<Message> _messages = List<Message>();
@@ -32,14 +35,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   bool newMessage = false;
   bool isLoading = false;
 
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _fetchData();
+
+  _initSocketManager() async {
+    if (token == null) return;
     socketManager = GetIt.instance<WebSocketManager>();
-    socketManager.connectToServer(GetIt.instance<AppConfig>().token,
-        onSuccess: (message) {
+    socketManager.connectToServer(token, onSuccess: (message) {
       setState(() {
         _messages.insert(0, message);
         Timer(
@@ -54,10 +54,19 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }, onError: () {
       print("ws create failure");
     });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    // _getToken();
+    _fetchData();
+    _initSocketManager();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        if (!isLoading &&page < maxPage) {
+        if (!isLoading && page < maxPage) {
           page++;
           _fetchData();
         }
@@ -175,12 +184,12 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   int maxPage;
 
   _fetchData() async {
+    if (token == null) return;
     isLoading = true;
     var httpManager = GetIt.instance<HttpManager>();
     var parameters = {"kind": "room_msg", "id": 1, "page": page};
-    httpManager.GET("/find/",
-        token: GetIt.instance<AppConfig>().token,
-        parameters: parameters, onSuccess: (data) {
+    httpManager.GET("/find/", token: token, parameters: parameters,
+        onSuccess: (data) {
       Chat chat;
       chat = Chat.fromJson(data);
       if (chat.code == 200) {

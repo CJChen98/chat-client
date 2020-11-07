@@ -3,6 +3,7 @@ class AppConfig {
   Enviroment env = Enviroment.LOCAL;
   bool isWebPlatform = false;
   num currentUserID;
+  String username;
   String token;
   String get apiHost {
     switch (env) {
