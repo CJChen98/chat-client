@@ -1,5 +1,7 @@
 {
-    "user": "$user",
-    "messages": "$[]message",
-    "users": "$[]user"
+  "user": "$user",
+  "messages": "$[]message",
+  "users": "$[]user",
+  "conversations": "$[]conversation",
+  "rooms": "$[]room"
 }

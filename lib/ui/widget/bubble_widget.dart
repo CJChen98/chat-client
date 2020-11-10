@@ -1,13 +1,15 @@
+import 'dart:ui';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/models/message.dart';
-import 'package:flutter_web/utils/size_config.dart';
 import 'package:get_it/get_it.dart';
 
 class BubbleWidget extends StatelessWidget {
   Message message;
   AppConfig appConfig = GetIt.instance<AppConfig>();
+  double _width;
 
   BubbleWidget(this.message);
 
@@ -15,9 +17,10 @@ class BubbleWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    _width = MediaQuery.of(context).size.width;
     _isMyMessage = message.user_id == appConfig.currentUserID;
     return Container(
-      padding: EdgeInsets.all(8.dp),
+      padding: EdgeInsets.all(8),
       child: Row(
         // verticalDirection: VerticalDirection.up,
         mainAxisAlignment:
@@ -53,6 +56,7 @@ class BubbleWidget extends StatelessWidget {
         topLeft: big, topRight: small, bottomLeft: big, bottomRight: big);
     var receiveRadius = BorderRadius.only(
         topLeft: small, topRight: big, bottomLeft: big, bottomRight: big);
+
     return Container(
       decoration: BoxDecoration(
           color: _isMyMessage ? Colors.blue : Colors.blueGrey[200],
@@ -62,7 +66,7 @@ class BubbleWidget extends StatelessWidget {
           borderRadius: _isMyMessage ? sendRadius : receiveRadius),
       padding: EdgeInsets.only(left: 12, right: 12, top: 6, bottom: 6),
       child: ConstrainedBox(
-          constraints: BoxConstraints(maxWidth: SizeConfig.screenWidth / 5 * 3),
+          constraints: BoxConstraints(maxWidth: (_width / 5) * 3),
           child: Text(
             _convertStringToRichText(),
             softWrap: true,

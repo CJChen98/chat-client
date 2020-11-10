@@ -17,29 +17,27 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class ChatDetailPage extends StatefulWidget {
-  Chat chat;
-  String token;
-
-  ChatDetailPage({this.chat});
-
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
 
 class _ChatDetailPageState extends State<ChatDetailPage> {
-  String token= GetIt.instance<AppConfig>().token;
-  WebSocketManager socketManager;
-  int page = 0;
+  String _token = GetIt.instance<AppConfig>().token;
+  String _username = GetIt.instance<AppConfig>().username;
+  int _userID = GetIt.instance<AppConfig>().currentUserID;
+  WebSocketManager _socketManager;
+  int _page = 0;
   List<Message> _messages = List<Message>();
   ScrollController _scrollController = ScrollController();
-  bool newMessage = false;
-  bool isLoading = false;
-
+  bool _isLoading = false;
 
   _initSocketManager() async {
-    if (token == null) return;
-    socketManager = GetIt.instance<WebSocketManager>();
-    socketManager.connectToServer(token, onSuccess: (message) {
+    if (_token == null) {
+      Navigator.of(context).pushReplacementNamed("login");
+      return;
+    }
+    _socketManager = GetIt.instance<WebSocketManager>();
+    _socketManager.connectToServer(_token, onSuccess: (message) {
       setState(() {
         _messages.insert(0, message);
         Timer(
@@ -56,18 +54,37 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     });
   }
 
+  _initUserData() {
+    _getValue().then((value) {
+      if (value) {
+        GetIt.instance<AppConfig>()
+          ..currentUserID = _userID
+          ..username = _username
+          ..token = _token;
+        _fetchData();
+        _initSocketManager();
+      }
+    });
+  }
+
+  Future<bool> _getValue() async {
+    final spf = await SharedPreferences.getInstance();
+    _token = spf.getString("token");
+    _username = spf.getString("username");
+    _userID = int.parse(spf.getString("id") ?? "-1");
+    return _token.isNotEmpty && _username.isNotEmpty && _userID != -1;
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    // _getToken();
-    _fetchData();
-    _initSocketManager();
+    _initUserData();
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        if (!isLoading && page < maxPage) {
-          page++;
+        if (!_isLoading && _page < maxPage) {
+          _page++;
           _fetchData();
         }
       }
@@ -76,7 +93,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    socketManager.disconnect();
+    _socketManager.disconnect();
     super.dispose();
   }
 
@@ -154,11 +171,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               return;
             }
             var message = Message()
-              ..username = widget.chat.data.user.username
+              ..username = _username
               ..content = _inputController.value.text
               ..room_id = 1
-              ..user_id = widget.chat.data.user.ID;
-            socketManager.sendMessage(json.encode(message));
+              ..user_id = _userID;
+            _socketManager.sendMessage(json.encode(message));
             _inputController.clear();
           },
           icon: Icon(Icons.send),
@@ -175,8 +192,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       controller: _scrollController,
       itemCount:
           _messages == null ?? _messages.length == 0 ? 0 : _messages.length,
-      itemBuilder: (context, index) {
-        return BubbleWidget(_messages.elementAt(index));
+      // ignore: missing_return
+      itemBuilder: (_, index) {
+        return BubbleWidget(_messages[index]);
       },
     ));
   }
@@ -184,24 +202,27 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   int maxPage;
 
   _fetchData() async {
-    if (token == null) return;
-    isLoading = true;
+    if (_token == null) {
+      Navigator.of(context).pushReplacementNamed("login");
+      return;
+    }
+    _isLoading = true;
     var httpManager = GetIt.instance<HttpManager>();
-    var parameters = {"kind": "room_msg", "id": 1, "page": page};
-    httpManager.GET("/find/", token: token, parameters: parameters,
+    var parameters = {"kind": "msg", "id": 1, "page": _page};
+    httpManager.GET("/fetch/", token: _token, parameters: parameters,
         onSuccess: (data) {
       Chat chat;
       chat = Chat.fromJson(data);
       if (chat.code == 200) {
         maxPage = int.parse(chat.msg);
         setState(() {
-          isLoading = false;
+          _isLoading = false;
           _messages.addAll(chat.data.messages);
         });
         if (chat.code == 404) {
           maxPage = int.parse(chat.msg);
-          page = maxPage;
-          isLoading = false;
+          _page = maxPage;
+          _isLoading = false;
         }
       }
     }, onError: (error) {

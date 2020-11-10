@@ -9,6 +9,7 @@ import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
+import 'package:flutter_web/ui/home_page.dart';
 import 'package:flutter_web/ui/login_page.dart';
 import 'package:flutter_web/ui/splash_page.dart';
 import 'package:get_it/get_it.dart';
@@ -16,7 +17,7 @@ import 'package:get_it/get_it.dart';
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
   var appConfig = GetIt.instance<AppConfig>();
-  appConfig.env = Enviroment.DEV;
+  appConfig.env = Enviroment.LOCAL;
   GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(HttpManager());
   try {
@@ -49,10 +50,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Chat',
       routes: {
-        "Login": (context) => LoginPage(),
-        "Chat": (context) => ChatDetailPage(
-              chat: ModalRoute.of(context).settings.arguments,
-            )
+        "login": (context) => LoginPage(),
+        "chat": (context) => ChatDetailPage(),
+        "home": (context) => HomePage()
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,

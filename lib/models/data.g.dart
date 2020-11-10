@@ -18,11 +18,21 @@ Data _$DataFromJson(Map<String, dynamic> json) {
     ..users = (json['users'] as List)
         ?.map(
             (e) => e == null ? null : User.fromJson(e as Map<String, dynamic>))
+        ?.toList()
+    ..conversations = (json['conversations'] as List)
+        ?.map((e) =>
+            e == null ? null : Conversation.fromJson(e as Map<String, dynamic>))
+        ?.toList()
+    ..rooms = (json['rooms'] as List)
+        ?.map(
+            (e) => e == null ? null : Room.fromJson(e as Map<String, dynamic>))
         ?.toList();
 }
 
 Map<String, dynamic> _$DataToJson(Data instance) => <String, dynamic>{
       'user': instance.user,
       'messages': instance.messages,
-      'users': instance.users
+      'users': instance.users,
+      'conversations': instance.conversations,
+      'rooms': instance.rooms
     };
