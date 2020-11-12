@@ -1,10 +1,10 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:flutter_web/ui/home_page.dart';
+import 'package:flutter_web/ui/login_page.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -24,25 +24,24 @@ class _SplashPageState extends State<SplashPage>
         AnimationController(duration: Duration(seconds: 2), vsync: this);
     super.initState();
     _controller.repeat();
-    _checkUserData();
+    Future.delayed(Duration(seconds: 2), () {
+      _checkUserData();
+    });
   }
 
   _checkUserData() async {
     var token = await _getSharedPreferences("token");
     var username = await _getSharedPreferences("username");
     var id = await _getSharedPreferences("id");
-    Timer(Duration(seconds: 3), () {
-      if (token == null || username == null || id == null) {
-        Navigator.of(context).pushReplacementNamed("login");
-      } else {
-        GetIt.instance<AppConfig>()
-          ..username = username
-          ..token = token
-          ..currentUserID = int.parse(id);
-        _checkToken(token);
-        // Navigator.of(context).pushReplacementNamed("chat");
-      }
-    });
+    if (token == null || username == null || id == null) {
+      Navigator.of(context).pushReplacementNamed(LoginPage.routName);
+    } else {
+      GetIt.instance<AppConfig>()
+        ..username = username
+        ..token = token
+        ..currentUserID = int.parse(id);
+      _checkToken(token);
+    }
   }
 
   _getSharedPreferences(String key) async {
@@ -62,13 +61,9 @@ class _SplashPageState extends State<SplashPage>
       Chat chat;
       chat = Chat.fromJson(data);
       if (chat.code > 0) {
-        // SharedPreferences.getInstance().then((spf) {
-        //   spf.setString("token", chat.token);
-        // });
-        // GetIt.instance<AppConfig>().token = chat.token;
-        Navigator.of(context).pushReplacementNamed("home");
+        Navigator.of(context).pushReplacementNamed(HomePage.routName);
       } else {
-        Navigator.of(context).pushReplacementNamed("login");
+        Navigator.of(context).pushReplacementNamed(LoginPage.routName);
       }
     }, onError: (_) {});
   }

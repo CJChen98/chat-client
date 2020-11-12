@@ -12,8 +12,7 @@ class Message {
     num ID;
     num user_id;
     String username;
-    num to_user_id;
-    num room_id;
+    num conversation_id;
     String content;
     String image_url;
     

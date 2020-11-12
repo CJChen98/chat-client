@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/data/conversations_provider.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
@@ -13,12 +14,13 @@ import 'package:flutter_web/ui/home_page.dart';
 import 'package:flutter_web/ui/login_page.dart';
 import 'package:flutter_web/ui/splash_page.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
   var appConfig = GetIt.instance<AppConfig>();
   appConfig.env = Enviroment.LOCAL;
-  GetIt.instance.registerSingleton(WebSocketManager());
+  // GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(HttpManager());
   try {
     if (Platform.isAndroid || Platform.isIOS) {
@@ -40,7 +42,10 @@ void main() {
   } else {
     appConfig.isBigScreen = false;
   }
-  runApp(MyApp());
+  runApp(MultiProvider(
+    providers: [ChangeNotifierProvider(create: (_) => ConversationsProvider())],
+    child: MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -50,9 +55,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Chat',
       routes: {
-        "login": (context) => LoginPage(),
-        "chat": (context) => ChatDetailPage(),
-        "home": (context) => HomePage()
+        LoginPage.routName: (context) => LoginPage(),
+        ChatDetailPage.routName: (context) =>
+            ChatDetailPage(ModalRoute.of(context).settings.arguments),
+        HomePage.routName: (context) => HomePage()
       },
       theme: ThemeData(
         primarySwatch: Colors.blue,

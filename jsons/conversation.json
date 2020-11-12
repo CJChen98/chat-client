@@ -1,6 +1,9 @@
 {
-  "ID": 2,
+  "CreatedAt": "0001-01-01T00:00:00Z",
+  "UpdatedAt": "0001-01-01T00:00:00Z",
+  "DeletedAt": "0001-01-01T00:00:00Z",
+  "ID": 0,
   "private": false,
-  "receiver_id": 2,
-  "user_id": 1
+  "receiver_id": 0,
+  "user_id": 0
 }

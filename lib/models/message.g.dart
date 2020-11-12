@@ -14,8 +14,7 @@ Message _$MessageFromJson(Map<String, dynamic> json) {
     ..ID = json['ID'] as num
     ..user_id = json['user_id'] as num
     ..username = json['username'] as String
-    ..to_user_id = json['to_user_id'] as num
-    ..room_id = json['room_id'] as num
+    ..conversation_id = json['conversation_id'] as num
     ..content = json['content'] as String
     ..image_url = json['image_url'] as String;
 }
@@ -27,8 +26,7 @@ Map<String, dynamic> _$MessageToJson(Message instance) => <String, dynamic>{
       'ID': instance.ID,
       'user_id': instance.user_id,
       'username': instance.username,
-      'to_user_id': instance.to_user_id,
-      'room_id': instance.room_id,
+      'conversation_id': instance.conversation_id,
       'content': instance.content,
       'image_url': instance.image_url
     };

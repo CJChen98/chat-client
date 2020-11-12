@@ -63,7 +63,6 @@ class HttpManager {
         throw Exception('errorMsg: ${response.data}');
       }
     } catch (e) {
-      log(e);
       onError(e);
     }
   }

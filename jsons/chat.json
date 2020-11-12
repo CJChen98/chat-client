@@ -1,6 +1,6 @@
 {
     "code": 200,
     "msg": "登录成功",
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVaWQiOjEsIlVzZXJuYW1lIjoiY2hlbjEiLCJleHAiOjE2MDQzMTA5MjIsImp0aSI6IjEiLCJpc3MiOiJjaGl0YW5kYS1naW4tY2hhdCIsIm5iZiI6MTYwNDMwMzcyMn0.-Jm98e3E_KUTlGJRjhnyxj6g0F5772jUCr6YRAfQ0tg",
+    "token": "m98e3E_KUTlGJRjhnyxj6g0F5772jUCr6YRAfQ0tg",
     "data": "$data"
 }

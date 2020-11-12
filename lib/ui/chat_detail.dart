@@ -6,6 +6,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/data/conversations_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/models/index.dart';
 import 'package:flutter_web/models/message.dart';
@@ -13,10 +14,17 @@ import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/widget/bubble_widget.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class ChatDetailPage extends StatefulWidget {
+  static String routName = "/chat";
+
+  Conversation conversation;
+
+  ChatDetailPage(this.conversation);
+
   @override
   _ChatDetailPageState createState() => _ChatDetailPageState();
 }
@@ -25,34 +33,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   String _token = GetIt.instance<AppConfig>().token;
   String _username = GetIt.instance<AppConfig>().username;
   int _userID = GetIt.instance<AppConfig>().currentUserID;
-  WebSocketManager _socketManager;
   int _page = 0;
   List<Message> _messages = List<Message>();
   ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
-
-  _initSocketManager() async {
-    if (_token == null) {
-      Navigator.of(context).pushReplacementNamed("login");
-      return;
-    }
-    _socketManager = GetIt.instance<WebSocketManager>();
-    _socketManager.connectToServer(_token, onSuccess: (message) {
-      setState(() {
-        _messages.insert(0, message);
-        Timer(
-            Duration(milliseconds: 500),
-            () => {
-                  _scrollController.animateTo(
-                      _scrollController.position.minScrollExtent,
-                      duration: Duration(milliseconds: 500),
-                      curve: Curves.ease)
-                });
-      });
-    }, onError: () {
-      print("ws create failure");
-    });
-  }
 
   _initUserData() {
     _getValue().then((value) {
@@ -61,8 +45,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           ..currentUserID = _userID
           ..username = _username
           ..token = _token;
-        _fetchData();
-        _initSocketManager();
       }
     });
   }
@@ -75,11 +57,25 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     return _token.isNotEmpty && _username.isNotEmpty && _userID != -1;
   }
 
+  ConversationsProvider _conversationsProvider;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _conversationsProvider = Provider.of<ConversationsProvider>(context);
+    _conversationsProvider
+        .getMessageListByConversationID(widget.conversation.ID)
+        .then((value) {
+      _messages = value;
+    });
+  }
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     _initUserData();
+
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
@@ -93,7 +89,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
-    _socketManager.disconnect();
     super.dispose();
   }
 
@@ -173,9 +168,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             var message = Message()
               ..username = _username
               ..content = _inputController.value.text
-              ..room_id = 1
+              ..conversation_id = widget.conversation.ID
               ..user_id = _userID;
-            _socketManager.sendMessage(json.encode(message));
+            try {
+              WebSocketManager.instance.sendMessage(json.encode(message));
+            } catch (e) {
+              log(e.toString());
+            }
             _inputController.clear();
           },
           icon: Icon(Icons.send),

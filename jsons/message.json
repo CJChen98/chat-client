@@ -5,8 +5,7 @@
   "ID": 0,
   "user_id": 0,
   "username": "sdasdadasd",
-  "to_user_id": 0,
-  "room_id": 0,
+  "conversation_id": 0,
   "content": "",
   "image_url": ""
 }

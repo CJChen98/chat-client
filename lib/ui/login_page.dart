@@ -1,16 +1,20 @@
 import 'dart:developer';
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/data/conversations_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:flutter_web/ui/home_page.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
+  static String routName = "/login";
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -22,6 +26,8 @@ class _LoginPageState extends State<LoginPage> {
   FocusNode _usernameFocusNode = FocusNode();
   Size _size;
 
+  ConversationsProvider provider;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -31,9 +37,9 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    _size = MediaQuery
-        .of(context)
-        .size;
+    provider = Provider.of<ConversationsProvider>(context);
+
+    _size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(title: Text("welcome to gin-chat~")),
       body: _loginBody(),
@@ -120,7 +126,9 @@ class _LoginPageState extends State<LoginPage> {
           ..username = chat.data.user.username
           ..token = chat.token
           ..currentUserID = chat.data.user.ID;
-        Navigator.of(context).pushReplacementNamed("home", arguments: chat);
+        provider.reset();
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(HomePage.routName, (_) => false);
       }
     }, onError: (error) {
       log(error);
@@ -129,11 +137,9 @@ class _LoginPageState extends State<LoginPage> {
 
   _saveUserInfo(String key, String value) async {
     var spf = await SharedPreferences.getInstance();
-    spf.setString(key, value).then((result) =>
-    {
-      if (result) {debugPrint("$key 保存成功")} else
-        {debugPrint("$key 保存失败")}
-    });
+    spf.setString(key, value).then((result) => {
+          if (result) {debugPrint("$key 保存成功")} else {debugPrint("$key 保存失败")}
+        });
   }
 
   _usernameInput() {
