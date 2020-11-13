@@ -166,7 +166,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Flutter Chat"),
+        title: Text("Gin Chat"),
       ),
       body: _widgetList[_selectIndex],
       floatingActionButton: _selectIndex == 0
