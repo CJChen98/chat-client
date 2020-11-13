@@ -120,12 +120,12 @@ class _LoginPageState extends State<LoginPage> {
       chat = Chat.fromJson(data);
       if (chat.code == 200) {
         await _saveUserInfo("token", chat.token);
-        await _saveUserInfo("id", chat.data.user.ID.toString());
+        await _saveUserInfo("id", chat.data.user.id.toString());
         await _saveUserInfo("username", chat.data.user.username);
         GetIt.instance<AppConfig>()
           ..username = chat.data.user.username
           ..token = chat.token
-          ..currentUserID = chat.data.user.ID;
+          ..currentUserID = chat.data.user.id;
         provider.reset();
         Navigator.of(context)
             .pushNamedAndRemoveUntil(HomePage.routName, (_) => false);

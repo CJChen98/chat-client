@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   ];
   static String _token = GetIt.instance<AppConfig>().token;
   static String _username = GetIt.instance<AppConfig>().username;
-  static int _userID = GetIt.instance<AppConfig>().currentUserID;
+  static String _userID = GetIt.instance<AppConfig>().currentUserID;
 
   _initUserData() {
     _getValue().then((value) {
@@ -49,8 +49,12 @@ class _HomePageState extends State<HomePage> {
           ..currentUserID = _userID
           ..username = _username
           ..token = _token;
-        if (_conversationsModel.list.isEmpty) _fetchData();
+        // if (_conversationsModel.list.isEmpty)
+        _fetchData();
         _initSocketManager();
+      } else {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil(LoginPage.routName, (route) => false);
       }
     });
   }
@@ -59,8 +63,8 @@ class _HomePageState extends State<HomePage> {
     final spf = await SharedPreferences.getInstance();
     _token = spf.getString("token");
     _username = spf.getString("username");
-    _userID = int.parse(spf.getString("id") ?? "-1");
-    return _token.isNotEmpty && _username.isNotEmpty && _userID != -1;
+    _userID = spf.getString("id");
+    return _token.isNotEmpty && _username.isNotEmpty && _userID.isNotEmpty;
   }
 
   @override
@@ -128,10 +132,8 @@ class _HomePageState extends State<HomePage> {
         .GET("/fetch/", token: _token, parameters: query, onSuccess: (data) {
       var chat = Chat.fromJson(data);
       if (chat.code == 200) {
-        setState(() {
-          chat.data.conversations.toList().forEach((element) {
-            _conversationsModel.add(element);
-          });
+        chat.data.conversations.toList().forEach((element) {
+          _conversationsModel.add(element);
         });
       }
     }, onError: (err) {
@@ -146,7 +148,9 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     _socketManager.connectToServer(_token, onSuccess: (message) {
-      _conversationsModel.addNewMessage(message);
+      var bool = ModalRoute.of(context).isCurrent;
+      log(bool.toString());
+      _conversationsModel.addNewMessage(message, unread: bool);
     }, onError: () {
       print("ws create failure");
     });
@@ -198,14 +202,25 @@ class _ConversationListPage extends StatelessWidget {
       shouldRebuild: (previous, next) => previous == next,
       selector: (context, provider) => provider.list,
       builder: (context, provider, child) {
-        return ListView.builder(
+        return ListView.separated(
+          physics: BouncingScrollPhysics(),
           itemCount: provider.length,
           itemBuilder: (context, index) {
             return Selector<ConversationsProvider, Conversation>(
+              shouldRebuild: (previous, next) {
+                log((previous == next).toString());
+                return previous == next;
+              },
               selector: (context, provider) => provider.list[index],
               builder: (context, data, child) {
-                return ConversationItem(data);
+                return _ConversationItem(data);
               },
+            );
+          },
+          separatorBuilder: (BuildContext context, int index) {
+            return Divider(
+              height: 10,
+              color: Colors.black54,
             );
           },
         );
@@ -214,46 +229,17 @@ class _ConversationListPage extends StatelessWidget {
   }
 }
 
-class ConversationItem extends StatefulWidget {
+// ignore: must_be_immutable
+class _ConversationItem extends StatefulWidget {
   Conversation conversation;
 
-  ConversationItem(this.conversation);
+  _ConversationItem(this.conversation);
 
   @override
   State<StatefulWidget> createState() => _ConversationItemState();
 }
 
-class _ConversationItemState extends State<ConversationItem> {
-  String title;
-  String avatar;
-
-  _init() {
-    var query = {
-      "type": widget.conversation.private ? "user" : "room",
-      "id": widget.conversation.receiver_id
-    };
-    GetIt.instance<HttpManager>().GET("/fetch/",
-        token: _HomePageState._token, parameters: query, onSuccess: (data) {
-      var chat = Chat.fromJson(data);
-      setState(() {
-        if (chat.code == 2001) {
-          title = chat.data.rooms.first.room_name;
-        }
-        if (chat.code == 2002) {
-          title = chat.data.users.first.username;
-        }
-      });
-    }, onError: (err) {
-      log(err);
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _init();
-  }
-
+class _ConversationItemState extends State<_ConversationItem> {
   @override
   Widget build(BuildContext context) {
     return _conversationItem();
@@ -262,20 +248,45 @@ class _ConversationItemState extends State<ConversationItem> {
   _conversationItem() {
     _avatar() {
       return Padding(
-          padding: EdgeInsets.all(8),
+          padding: EdgeInsets.only(right: 10),
           child: CircleAvatar(
-              radius: 30,
-              backgroundImage: AssetImage('assets/images/splash.png')));
+              minRadius: 10,
+              maxRadius: 30,
+              backgroundImage: AssetImage(
+                'assets/images/splash.png',
+              )));
     }
 
     _detail() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [Text(title.toString()), Text("啊吧啊吧")],
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          ConstrainedBox(
+            constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width * 0.3),
+            child: Text(
+              widget.conversation.title.toString(),
+              style:
+                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+              softWrap: false,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          ConstrainedBox(
+              constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.3),
+              child: Text(
+                widget.conversation.preview.toString(),
+                style: TextStyle(color: Colors.black54),
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              )),
+        ],
       );
     }
 
-    return GestureDetector(
+    return InkWell(
       onTap: () {
         Navigator.of(context)
             .pushNamed(ChatDetailPage.routName, arguments: widget.conversation);
@@ -283,12 +294,21 @@ class _ConversationItemState extends State<ConversationItem> {
       child: Container(
         padding: const EdgeInsets.all(8),
         child: Row(children: <Widget>[
-          Expanded(flex: 2, child: _avatar()),
-          Expanded(flex: 11, child: _detail()),
-          Expanded(
-            flex: 1,
-            child: Icon(Icons.close),
-          )
+          // Expanded(flex: 2, child: _avatar()),
+          // Expanded(flex: 13, child: _detail()),
+          _avatar(),
+          Flexible(
+            child: _detail(),
+          ),
+          widget.conversation.count != 0
+              ? Text(widget.conversation.count.toString())
+              : Text(""),
+          // Expanded(
+          //   flex: 1,
+          //   child: widget.conversation.count != 0
+          //       ? Text(widget.conversation.count.toString())
+          //       : Text(""),
+          // )
         ]),
       ),
     );
@@ -315,7 +335,7 @@ class _MinePageState extends State<_MinePage> {
   }
 
   _avatar() {
-    return GestureDetector(
+    return InkWell(
       onTap: _selectImg,
       child: Padding(
           padding: EdgeInsets.all(10),
@@ -328,12 +348,8 @@ class _MinePageState extends State<_MinePage> {
     return Column(
       children: <Widget>[
         Row(children: <Widget>[
-          Expanded(
-            flex: 3,
-            child: _avatar(),
-          ),
-          Expanded(
-            flex: 12,
+          _avatar(),
+          Flexible(
             child: Text(_HomePageState._username),
           )
         ]),

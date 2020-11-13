@@ -2,7 +2,7 @@ class AppConfig {
   bool isBigScreen;
   Enviroment env = Enviroment.LOCAL;
   bool isWebPlatform = false;
-  num currentUserID;
+  String currentUserID;
   String username;
   String token;
   String get apiHost {

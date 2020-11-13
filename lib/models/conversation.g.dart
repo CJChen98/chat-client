@@ -13,8 +13,8 @@ Conversation _$ConversationFromJson(Map<String, dynamic> json) {
     ..DeletedAt = json['DeletedAt'] as String
     ..ID = json['ID'] as num
     ..private = json['private'] as bool
-    ..receiver_id = json['receiver_id'] as num
-    ..user_id = json['user_id'] as num;
+    ..receiver_id = json['receiver_id'] as String
+    ..user_id = json['user_id'] as String;
 }
 
 Map<String, dynamic> _$ConversationToJson(Conversation instance) =>

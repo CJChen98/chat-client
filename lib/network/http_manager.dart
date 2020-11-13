@@ -22,45 +22,42 @@ class HttpManager {
   // ignore: non_constant_identifier_names
   POST<T>(String path,
       {String token,
-        Map<String, dynamic> data,
-        Function(T) onSuccess,
-        Function(String error) onError}) async {
+      Map<String, dynamic> data,
+      Function(T) onSuccess,
+      Function(String error) onError}) async {
     try {
       Response response = await _dio.post(path,
           data: data,
           options: Options(
               contentType: Headers.formUrlEncodedContentType,
-              headers: {"Authorization": token??""}));
+              headers: {"Authorization": token ?? ""}));
       if (response.statusCode == 200) {
         if (onSuccess != null) {
           onSuccess(response.data);
         }
-      } else {
-        throw Exception('errorMsg: ${response.data}');
       }
     } catch (e) {
       log(e);
       onError(e);
     }
   }
+
   GET<T>(String path,
       {String token,
-        parameters,
-        data,
-        Function(T) onSuccess,
-        Function(String error) onError}) async {
+      parameters,
+      data,
+      Function(T) onSuccess,
+      Function(String error) onError}) async {
     try {
       Response response = await _dio.get(path,
           queryParameters: parameters,
           options: Options(
               contentType: Headers.formUrlEncodedContentType,
-              headers: {"Authorization": token??""}));
+              headers: {"Authorization": token ?? ""}));
       if (response.statusCode == 200) {
         if (onSuccess != null) {
           onSuccess(response.data);
         }
-      } else {
-        throw Exception('errorMsg: ${response.data}');
       }
     } catch (e) {
       onError(e);

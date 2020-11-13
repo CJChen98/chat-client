@@ -4,6 +4,6 @@
   "DeletedAt": "0001-01-01T00:00:00Z",
   "ID": 0,
   "private": false,
-  "receiver_id": 0,
-  "user_id": 0
+  "receiver_id": "",
+  "user_id": ""
 }

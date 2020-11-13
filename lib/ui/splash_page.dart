@@ -39,7 +39,7 @@ class _SplashPageState extends State<SplashPage>
       GetIt.instance<AppConfig>()
         ..username = username
         ..token = token
-        ..currentUserID = int.parse(id);
+        ..currentUserID = id;
       _checkToken(token);
     }
   }

@@ -9,32 +9,30 @@ import 'package:flutter_web/network/http_manager.dart';
 import 'package:get_it/get_it.dart';
 
 class ConversationsProvider with ChangeNotifier {
-  Map<num, List<Message>> _conversations = Map();
+  Map<String, List<Message>> _conversations = Map();
   List<Conversation> _list = List();
 
-  Map<num, List<Message>> get value => _conversations;
+  Map<String, List<Message>> get value => _conversations;
 
   List<Conversation> get list => _list;
 
   void add(Conversation conversation) {
-    _conversations[conversation.ID] = List<Message>();
+    if (_conversations.containsKey(conversation.receiver_id)) return;
+    _conversations[conversation.receiver_id] = List<Message>();
     _list.add(conversation);
-    log("add ${conversation.ID}");
+    _fetchData(conversation);
     notifyListeners();
   }
 
-  Future<List<Message>> getMessageListByConversationID(num id) async {
-    var list = List<Message>();
-    if (_conversations.isNotEmpty) {
-      _conversations.forEach((key, value) async {
-        if (key == id) {
-          list = _conversations[key].isEmpty
-              ? await _fetchData(id)
-              : _conversations[key];
-        }
-      });
+  Future<List<Message>> getMessageListByConversation(
+      Conversation conversation) async {
+    if (_conversations.containsKey(conversation.receiver_id)) {
+      return _conversations[conversation.receiver_id].isEmpty
+          ? await _fetchData(conversation)
+          : _conversations[conversation.receiver_id];
+    } else {
+      return List<Message>();
     }
-    return list;
   }
 
   reset() {
@@ -42,37 +40,93 @@ class ConversationsProvider with ChangeNotifier {
     _conversations.clear();
   }
 
-  _fetchData(num id) async {
-    List<Message> list = List();
+  _fetchData(Conversation conversation) async {
     var _token = GetIt.instance<AppConfig>().token;
     var httpManager = GetIt.instance<HttpManager>();
-    var parameters = {"type": "msg", "id": id, "page": 0};
+    var query = {
+      "type": conversation.private ? "user" : "room",
+      "id": conversation.receiver_id
+    };
+    String title;
+    await httpManager.GET("/fetch/", token: _token, parameters: query,
+        onSuccess: (data) {
+      var chat = Chat.fromJson(data);
+      if (chat.code == 2001) {
+        title = chat.data.rooms.first.room_name;
+      }
+      if (chat.code == 2002) {
+        title = chat.data.users.first.username;
+      }
+    }, onError: (error) {
+      log("fetch home err ====>" + error.toString());
+    });
+    List<Message> list = List();
+    var parameters = {"type": "msg", "id": conversation.receiver_id, "page": 0};
     await httpManager.GET("/fetch/", token: _token, parameters: parameters,
         onSuccess: (data) {
       Chat chat;
       chat = Chat.fromJson(data);
       if (chat.code == 200) {
-        list = chat.data.messages;
+        list = chat.data.messages.toList();
       }
     }, onError: (error) {
-      log(error);
+      log("fetch msg err ====>" + error.toString());
     });
-    return _conversations[id]..addAll(list);
+    if (list.isNotEmpty) {
+      _updateConversation(
+        conversation.receiver_id,
+        msg: list.first,
+        title: title,
+      );
+    } else {
+      _updateConversation(
+        conversation.receiver_id,
+        title: title,
+      );
+    }
+    return _conversations[conversation.receiver_id]..addAll(list);
   }
 
-  void insertNewMessage(num id, Message message) {
-    if (_conversations.containsKey(id)) {
-      _conversations[id].insert(0, message);
+  void _updateConversation(String id,
+      {Message msg, String title, unread = false}) {
+    for (var value in _list) {
+      if (value.receiver_id == id) {
+        if (msg != null) {
+          value.preview = "${msg.username}: ${msg.content}";
+          if (unread) {
+            value.count++;
+          }
+        }
+        if (title != null) {
+          value.title = title;
+        }
+      }
+    }
+    notifyListeners();
+  }
+
+  void clearUnread(String id) {
+    for (var i = 0; i < _list.length; i++) {
+      if (_list[i].receiver_id == id) {
+        _list[i].count = 0;
+        notifyListeners();
+        break;
+      }
+    }
+  }
+
+  void addOldMessage(Message message) {
+    if (_conversations.containsKey(message.receiver_id)) {
+      _conversations[message.receiver_id].add(message);
       notifyListeners();
     }
   }
 
-  void addNewMessage(Message message) {
-    if (_conversations.isEmpty) return;
-    _conversations.forEach((key, value) {
-      if (key == message.conversation_id) {
-        insertNewMessage(message.conversation_id, message);
-      }
-    });
+  void addNewMessage(Message message, {unread = false}) {
+    if (_conversations.containsKey(message.receiver_id)) {
+      _conversations[message.receiver_id].insert(0, message);
+      _updateConversation(message.receiver_id, msg: message, unread: unread);
+      notifyListeners();
+    }
   }
 }

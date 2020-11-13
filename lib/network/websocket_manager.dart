@@ -53,6 +53,4 @@ class WebSocketManager {
   sendMessage(data) async {
     _chanel.sink.add(data);
   }
-
-//外部添加监听
 }

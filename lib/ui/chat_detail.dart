@@ -32,9 +32,8 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   String _token = GetIt.instance<AppConfig>().token;
   String _username = GetIt.instance<AppConfig>().username;
-  int _userID = GetIt.instance<AppConfig>().currentUserID;
+  String _userID = GetIt.instance<AppConfig>().currentUserID;
   int _page = 0;
-  List<Message> _messages = List<Message>();
   ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
 
@@ -53,21 +52,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final spf = await SharedPreferences.getInstance();
     _token = spf.getString("token");
     _username = spf.getString("username");
-    _userID = int.parse(spf.getString("id") ?? "-1");
-    return _token.isNotEmpty && _username.isNotEmpty && _userID != -1;
+    _userID = spf.getString("id");
+    return _token.isNotEmpty && _username.isNotEmpty && _userID.isNotEmpty;
   }
 
   ConversationsProvider _conversationsProvider;
 
   @override
   void didChangeDependencies() {
+    // _conversationsProvider.getMessageListByConversation(widget.conversation);
+    // _conversationsProvider.clearUnread(widget.conversation.receiver_id);
     super.didChangeDependencies();
-    _conversationsProvider = Provider.of<ConversationsProvider>(context);
-    _conversationsProvider
-        .getMessageListByConversationID(widget.conversation.ID)
-        .then((value) {
-      _messages = value;
-    });
   }
 
   @override
@@ -75,7 +70,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     // TODO: implement initState
     super.initState();
     _initUserData();
-
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
@@ -84,6 +78,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           _fetchData();
         }
       }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((callback) {
+      _conversationsProvider = Provider.of<ConversationsProvider>(context,listen: false);
+      _conversationsProvider.clearUnread(widget.conversation.receiver_id);
     });
   }
 
@@ -169,6 +167,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
               ..username = _username
               ..content = _inputController.value.text
               ..conversation_id = widget.conversation.ID
+              ..receiver_id = widget.conversation.receiver_id
               ..user_id = _userID;
             try {
               WebSocketManager.instance.sendMessage(json.encode(message));
@@ -183,19 +182,31 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  _messageList() {
-    return Flexible(
-        child: ListView.builder(
-      reverse: true,
-      physics: BouncingScrollPhysics(),
-      controller: _scrollController,
-      itemCount:
-          _messages == null ?? _messages.length == 0 ? 0 : _messages.length,
-      // ignore: missing_return
-      itemBuilder: (_, index) {
-        return BubbleWidget(_messages[index]);
+  _messageListView() {
+    return Selector<ConversationsProvider, Map<String, List<Message>>>(
+      shouldRebuild: (previous, next) => previous == next,
+      selector: (_, provider) => provider.value,
+      builder: (_, provider, __) {
+        return Flexible(
+          child: ListView.builder(
+            reverse: true,
+            physics: BouncingScrollPhysics(),
+            controller: _scrollController,
+            itemCount: provider[widget.conversation.receiver_id].length,
+            itemBuilder: (_, index) {
+              return Selector<ConversationsProvider, Message>(
+                shouldRebuild: (previous, next) => previous == next,
+                selector: (_, provider) =>
+                    provider.value[widget.conversation.receiver_id][index],
+                builder: (_, message, __) {
+                  return BubbleWidget(message);
+                },
+              );
+            },
+          ),
+        );
       },
-    ));
+    );
   }
 
   int maxPage;
@@ -210,22 +221,21 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     var parameters = {"kind": "msg", "id": 1, "page": _page};
     httpManager.GET("/fetch/", token: _token, parameters: parameters,
         onSuccess: (data) {
-      Chat chat;
-      chat = Chat.fromJson(data);
+      Chat chat = Chat.fromJson(data);
       if (chat.code == 200) {
         maxPage = int.parse(chat.msg);
-        setState(() {
-          _isLoading = false;
-          _messages.addAll(chat.data.messages);
+        chat.data.messages.toList().forEach((element) {
+          _conversationsProvider.addOldMessage(element);
         });
-        if (chat.code == 404) {
-          maxPage = int.parse(chat.msg);
-          _page = maxPage;
-          _isLoading = false;
-        }
       }
+      if (chat.code == 404) {
+        maxPage = int.parse(chat.msg);
+        _page = maxPage;
+      }
+      _isLoading = false;
     }, onError: (error) {
       log(error);
+      _isLoading = false;
     });
   }
 
@@ -233,7 +243,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     // var channel = IOWebSocketChannel.connect("")
     return Column(
       children: <Widget>[
-        _messageList(),
+        _messageListView(),
         _bottomInputBar(),
       ],
     );

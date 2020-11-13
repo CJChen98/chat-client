@@ -10,9 +10,10 @@ class Message {
     String UpdatedAt;
     String DeletedAt;
     num ID;
-    num user_id;
+    String user_id;
     String username;
     num conversation_id;
+    String receiver_id;
     String content;
     String image_url;
     

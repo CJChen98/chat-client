@@ -8,7 +8,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/data/conversations_provider.dart';
 import 'package:flutter_web/network/http_manager.dart';
-import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
 import 'package:flutter_web/ui/home_page.dart';
 import 'package:flutter_web/ui/login_page.dart';
@@ -19,7 +18,7 @@ import 'package:provider/provider.dart';
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
   var appConfig = GetIt.instance<AppConfig>();
-  appConfig.env = Enviroment.LOCAL;
+  appConfig.env = Enviroment.DEV;
   // GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(HttpManager());
   try {
@@ -53,7 +52,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Chat',
+      title: 'Gin Chat',
       routes: {
         LoginPage.routName: (context) => LoginPage(),
         ChatDetailPage.routName: (context) =>

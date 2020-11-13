@@ -1,10 +1,9 @@
 {
-  "id": 0,
-  "creator_id": 0,
+  "creator_id": "",
   "created_at": 0,
   "room_name": "",
   "member_size": 0,
   "introduction": "",
-  "id_": "",
+  "id": "",
   "avatar_path": ""
 }

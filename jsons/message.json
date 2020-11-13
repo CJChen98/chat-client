@@ -3,9 +3,10 @@
   "UpdatedAt": "0001-01-01T00:00:00Z",
   "DeletedAt": "0001-01-01T00:00:00Z",
   "ID": 0,
-  "user_id": 0,
-  "username": "sdasdadasd",
+  "user_id": "",
+  "username": "",
   "conversation_id": 0,
+  "receiver_id": "",
   "content": "",
   "image_url": ""
 }
