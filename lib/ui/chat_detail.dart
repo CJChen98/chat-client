@@ -59,13 +59,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   ConversationsProvider _conversationsProvider;
 
   @override
-  void didChangeDependencies() {
-    // _conversationsProvider.getMessageListByConversation(widget.conversation);
-    // _conversationsProvider.clearUnread(widget.conversation.receiver_id);
-    super.didChangeDependencies();
-  }
-
-  @override
   void initState() {
     // TODO: implement initState
     super.initState();
@@ -73,14 +66,15 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _scrollController.addListener(() {
       if (_scrollController.position.pixels ==
           _scrollController.position.maxScrollExtent) {
-        if (!_isLoading && _page < maxPage) {
+        if (!_isLoading) {
           _page++;
           _fetchData();
         }
       }
     });
     WidgetsBinding.instance.addPostFrameCallback((callback) {
-      _conversationsProvider = Provider.of<ConversationsProvider>(context,listen: false);
+      _conversationsProvider =
+          Provider.of<ConversationsProvider>(context, listen: false);
       _conversationsProvider.clearUnread(widget.conversation.receiver_id);
     });
   }
@@ -209,7 +203,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  int maxPage;
+  int maxPage = 1;
 
   _fetchData() async {
     if (_token == null) {
@@ -218,7 +212,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
     _isLoading = true;
     var httpManager = GetIt.instance<HttpManager>();
-    var parameters = {"kind": "msg", "id": 1, "page": _page};
+    var parameters = {
+      "type": "msg",
+      "id": widget.conversation.receiver_id,
+      "page": _page
+    };
     httpManager.GET("/fetch/", token: _token, parameters: parameters,
         onSuccess: (data) {
       Chat chat = Chat.fromJson(data);
