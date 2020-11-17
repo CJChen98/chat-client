@@ -48,7 +48,7 @@ class ConversationsProvider with ChangeNotifier {
       "id": conversation.receiver_id
     };
     String title;
-    await httpManager.GET("/fetch/", token: _token, parameters: query,
+    await httpManager.GET("/fetch/", token: _token, query: query,
         onSuccess: (data) {
       var chat = Chat.fromJson(data);
       if (chat.code == 2001) {
@@ -62,7 +62,7 @@ class ConversationsProvider with ChangeNotifier {
     });
     List<Message> list = List();
     var parameters = {"type": "msg", "id": conversation.receiver_id, "page": 0};
-    await httpManager.GET("/fetch/", token: _token, parameters: parameters,
+    await httpManager.GET("/fetch/", token: _token, query: parameters,
         onSuccess: (data) {
       Chat chat;
       chat = Chat.fromJson(data);

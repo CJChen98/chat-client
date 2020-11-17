@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:html' as html;
-import 'dart:io';
-
-import 'package:flutter/cupertino.dart';
-
-// ignore_for_file: public_member_api_docs, lines_longer_than_80_chars
+import 'dart:typed_data';
+import 'package:dio/dio.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
@@ -23,7 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
-  static String routName = "/home";
+  static const String routName = "/home";
 
   const HomePage({Key key}) : super(key: key);
 
@@ -128,8 +125,8 @@ class _HomePageState extends State<HomePage> {
 
   _fetchData() async {
     var query = {"type": "home", "id": _userID};
-    GetIt.instance<HttpManager>()
-        .GET("/fetch/", token: _token, parameters: query, onSuccess: (data) {
+    GetIt.instance<HttpManager>().GET("/fetch/", token: _token, query: query,
+        onSuccess: (data) {
       var chat = Chat.fromJson(data);
       if (chat.code == 200) {
         chat.data.conversations.toList().forEach((element) {
@@ -260,28 +257,34 @@ class _ConversationItemState extends State<_ConversationItem> {
     _detail() {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.max,
         children: [
           ConstrainedBox(
             constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.3),
             child: Text(
               widget.conversation.title.toString(),
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16),
               softWrap: false,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          ConstrainedBox(
-              constraints: BoxConstraints(
-                  maxWidth: MediaQuery.of(context).size.width * 0.3),
-              child: Text(
-                widget.conversation.preview.toString(),
-                style: TextStyle(color: Colors.black54),
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
-              )),
+          Padding(
+            padding: const EdgeInsets.only(top: 5),
+            child: ConstrainedBox(
+                constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.3),
+                child: Text(
+                  widget.conversation.preview.toString(),
+                  style: TextStyle(color: Colors.black54),
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                )),
+          ),
         ],
       );
     }
@@ -297,7 +300,7 @@ class _ConversationItemState extends State<_ConversationItem> {
           // Expanded(flex: 2, child: _avatar()),
           // Expanded(flex: 13, child: _detail()),
           _avatar(),
-          Flexible(
+          Expanded(
             child: _detail(),
           ),
           widget.conversation.count != 0
@@ -321,25 +324,54 @@ class _MinePage extends StatefulWidget {
 }
 
 class _MinePageState extends State<_MinePage> {
-  ImageProvider image = AssetImage('assets/images/splash.png');
+  ImageProvider _image = AssetImage('assets/images/splash.png');
+  dynamic _previewImage = AssetImage('assets/images/splash.png');
+  PickedFile _pickedFile;
+  String _progress;
+  Uint8List bytes;
 
-  _selectImg() async {
-    if (kIsWeb) {
-      var uploadInput = html.FileUploadInputElement();
-      uploadInput.accept = "images/*";
-    } else {
-      final pickedFile =
-          await ImagePicker().getImage(source: ImageSource.gallery);
-      File file = File(pickedFile.path);
-    }
+  _pickImg() async {
+    _pickedFile = await ImagePicker.platform
+        .pickImage(source: ImageSource.gallery, maxHeight: 640, maxWidth: 640);
+    _pickedFile.readAsBytes().then((value) {
+      setState(() {
+        bytes = value;
+        _previewImage = MemoryImage(value);
+      });
+    });
+  }
+
+  _pickImageDialog() async {
+    await showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Pick Image"),
+            content: Column(
+              children: <Widget>[
+                InkWell(onTap: _pickImg, child: Image(image: _previewImage)),
+              ],
+            ),
+            actions: [
+              FlatButton(
+                onPressed: () async {
+                  GetIt.instance<HttpManager>().Upload(_pickedFile, bytes,
+                      query: {"type": "user"},
+                      token: GetIt.instance<AppConfig>().token);
+                },
+                child: Text("Upload"),
+              )
+            ],
+          );
+        });
   }
 
   _avatar() {
     return InkWell(
-      onTap: _selectImg,
+      onTap: _pickImageDialog,
       child: Padding(
           padding: EdgeInsets.all(10),
-          child: CircleAvatar(radius: 40, backgroundImage: image)),
+          child: CircleAvatar(radius: 45, backgroundImage: _image)),
     );
   }
 

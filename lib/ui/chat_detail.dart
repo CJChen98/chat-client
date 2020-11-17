@@ -19,7 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 // ignore: must_be_immutable
 class ChatDetailPage extends StatefulWidget {
-  static String routName = "/chat";
+  static const String routName = "/chat";
 
   Conversation conversation;
 
@@ -217,7 +217,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
       "id": widget.conversation.receiver_id,
       "page": _page
     };
-    httpManager.GET("/fetch/", token: _token, parameters: parameters,
+    httpManager.GET("/fetch/", token: _token, query: parameters,
         onSuccess: (data) {
       Chat chat = Chat.fromJson(data);
       if (chat.code == 200) {

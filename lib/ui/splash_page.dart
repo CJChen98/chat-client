@@ -9,6 +9,8 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
+  static const String routName = "/splash";
+
   @override
   State<StatefulWidget> createState() => _SplashPageState();
 }

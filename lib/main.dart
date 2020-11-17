@@ -18,7 +18,7 @@ import 'package:provider/provider.dart';
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
   var appConfig = GetIt.instance<AppConfig>();
-  appConfig.env = Enviroment.DEV;
+  appConfig.env = Enviroment.LOCAL;
   // GetIt.instance.registerSingleton(WebSocketManager());
   GetIt.instance.registerSingleton(HttpManager());
   try {

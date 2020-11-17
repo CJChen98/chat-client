@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
-  static String routName = "/login";
+  static const String routName = "/login";
 
   @override
   _LoginPageState createState() => _LoginPageState();
