@@ -226,7 +226,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           _conversationsProvider.addOldMessage(element);
         });
       }
-      if (chat.code == 404) {
+      if (chat.code == 201) {
         maxPage = int.parse(chat.msg);
         _page = maxPage;
       }
@@ -238,7 +238,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   }
 
   _main() {
-    // var channel = IOWebSocketChannel.connect("")
     return Column(
       children: <Widget>[
         _messageListView(),

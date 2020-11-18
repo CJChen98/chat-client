@@ -217,7 +217,7 @@ class _ConversationListPage extends StatelessWidget {
               },
             );
           },
-          separatorBuilder: ( _, __) {
+          separatorBuilder: (_, __) {
             return Divider(
               height: 1,
               color: Colors.black54,
@@ -328,22 +328,16 @@ class _MinePageState extends State<_MinePage> {
       shouldRebuild: (odlItem, newItem) => odlItem == newItem,
       selector: (_, provider) => provider.user,
       builder: (_, user, __) {
-        return InkWell(
-          onTap: () {
-            Navigator.of(context).pushNamed(UserInfoPage.routName,
-                arguments:user.id);
-          },
-          child: Padding(
-              padding: EdgeInsets.all(10),
-              child: Hero(
-                tag: "avatar",
-                child: CircleAvatar(
-                    radius: 45,
-                    backgroundImage: user.avatar_path.isEmpty
-                        ? AssetImage('assets/images/splash.png')
-                        : NetworkImage(user.avatar_path)),
-              )),
-        );
+        return Padding(
+            padding: EdgeInsets.all(10),
+            child: Hero(
+              tag: "avatar",
+              child: CircleAvatar(
+                  radius: 45,
+                  backgroundImage: user.avatar_path.isEmpty
+                      ? AssetImage('assets/images/splash.png')
+                      : NetworkImage(user.avatar_path)),
+            ));
       },
     );
   }
@@ -352,12 +346,18 @@ class _MinePageState extends State<_MinePage> {
   Widget build(BuildContext context) {
     return Column(
       children: <Widget>[
-        Row(children: <Widget>[
-          _avatar(),
-          Flexible(
-            child: Text(_HomePageState._username),
-          )
-        ]),
+        InkWell(
+          onTap: () {
+            Navigator.of(context).pushNamed(UserInfoPage.routName,
+                arguments: GetIt.instance<AppConfig>().currentUserID);
+          },
+          child: Row(children: <Widget>[
+            _avatar(),
+            Flexible(
+              child: Text(_HomePageState._username),
+            )
+          ]),
+        ),
         RaisedButton(
           child: Text("退出登录"),
           color: Colors.redAccent,

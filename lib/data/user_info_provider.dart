@@ -12,7 +12,7 @@ class UserInfoProvider with ChangeNotifier {
   get user => _user;
 
   set(User user, {String token}) async {
-    user.avatar_path = _appConfig.apiHost + user.avatar_path;
+    user..avatar_path = _appConfig.apiHost + user.avatar_path;
     if (token != null) {
       await _saveUserInfo("token", token);
       _appConfig.token = token;

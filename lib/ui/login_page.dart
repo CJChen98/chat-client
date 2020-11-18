@@ -132,8 +132,8 @@ class _LoginPageState extends State<LoginPage> {
             .pushNamedAndRemoveUntil(HomePage.routName, (_) => false);
       }
     }, onError: (err) {
-      log(err);
       Fluttertoast.showToast(msg: err.toString());
+      log(err);
     });
   }
 

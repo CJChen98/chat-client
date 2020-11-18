@@ -36,7 +36,7 @@ class HttpManager {
       query,
       Function(dynamic) onSuccess,
       Function(int count, int total) onSendProgress,
-      Function(String error) onError}) async {
+      Function(dynamic) onError}) async {
     try {
       Response response = await _dio.post(path,
           data: FormData.fromMap(data),
@@ -82,25 +82,29 @@ class HttpManager {
       query,
       Function(dynamic) onSuccess,
       Function(int count, int total) onSendProgress,
-      Function(String error) onError}) async {
+      Function(dynamic) onError}) async {
     if (kIsWeb) {
-      var uri = Uri.parse(GetIt.instance<AppConfig>().apiHost +
-          "/upload?type=${query["type"]}&id=${query["id"] ?? ""}");
-      var stream = http.ByteStream(pickedFile.openRead());
-      var multipartFile = http.MultipartFile('img', stream, bytes.length,
-          filename: "image.png", contentType: MediaType('image', 'png'));
-      var request = http.MultipartRequest("POST", uri);
-      request.files.add(multipartFile);
-      request.headers["content-type"] = "application/json; charset=utf-8";
-      request.headers["Authorization"] = GetIt.instance<AppConfig>().token;
-      var response = await request.send();
-      print(response.statusCode);
-      await response.stream.transform(utf8.decoder).listen((value) {
-        print(value);
-        onSuccess(json.decode(value));
-      });
+      try {
+        var uri = Uri.parse(GetIt.instance<AppConfig>().apiHost +
+            "/upload?type=${query["type"]}&id=${query["id"] ?? ""}");
+        var stream = http.ByteStream(pickedFile.openRead());
+        var multipartFile = http.MultipartFile('img', stream, bytes.length,
+            filename: "image.png", contentType: MediaType('image', 'png'));
+        var request = http.MultipartRequest("POST", uri);
+        request.files.add(multipartFile);
+        request.headers["content-type"] = "application/json; charset=utf-8";
+        request.headers["Authorization"] = GetIt.instance<AppConfig>().token;
+        var response = await request.send();
+        print(response.statusCode);
+        await response.stream.transform(utf8.decoder).listen((value) {
+          print(value);
+          onSuccess(json.decode(value));
+        });
+      } catch (e) {
+        if (onError != null) onError(e);
+      }
     } else {
-      POST("/upload",
+     await POST("/upload",
           token: token,
           query: query,
           data: {

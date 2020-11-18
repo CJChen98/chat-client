@@ -103,7 +103,6 @@ class ConversationsProvider with ChangeNotifier {
           value.title = title;
         }
         if (avatar != null) {
-          log("$id: $avatar");
           value.avatar = GetIt.instance<AppConfig>().apiHost+avatar;
         }
       }
