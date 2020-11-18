@@ -6,6 +6,7 @@ import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/models/conversation.dart';
 import 'package:flutter_web/models/index.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 
 class ConversationsProvider with ChangeNotifier {
@@ -41,54 +42,55 @@ class ConversationsProvider with ChangeNotifier {
   }
 
   _fetchData(Conversation conversation) async {
-    var _token = GetIt.instance<AppConfig>().token;
+    var _token = GetIt
+        .instance<AppConfig>()
+        .token;
     var httpManager = GetIt.instance<HttpManager>();
     var query = {
       "type": conversation.private ? "user" : "room",
       "id": conversation.receiver_id
     };
     String title;
+    String avatar;
     await httpManager.GET("/fetch/", token: _token, query: query,
         onSuccess: (data) {
-      var chat = Chat.fromJson(data);
-      if (chat.code == 2001) {
-        title = chat.data.rooms.first.room_name;
-      }
-      if (chat.code == 2002) {
-        title = chat.data.users.first.username;
-      }
-    }, onError: (error) {
-      log("fetch home err ====>" + error.toString());
-    });
+          var chat = Chat.fromJson(data);
+          if (chat.code == 2001) {
+            title = chat.data.rooms.first.room_name;
+            avatar = chat.data.rooms.first.avatar_path;
+          }
+          if (chat.code == 2002) {
+            title = chat.data.users.first.username;
+            avatar = chat.data.users.first.avatar_path;
+          }
+        }, onError: (error) {
+          log("fetch home err ====>" + error.toString());
+        });
     List<Message> list = List();
     var parameters = {"type": "msg", "id": conversation.receiver_id, "page": 0};
     await httpManager.GET("/fetch/", token: _token, query: parameters,
         onSuccess: (data) {
-      Chat chat;
-      chat = Chat.fromJson(data);
-      if (chat.code == 200) {
-        list = chat.data.messages.toList();
-      }
-    }, onError: (error) {
-      log("fetch msg err ====>" + error.toString());
-    });
+          Chat chat;
+          chat = Chat.fromJson(data);
+          if (chat.code == 200) {
+            list = chat.data.messages.toList();
+          }
+        }, onError: (error) {
+          log("fetch msg err ====>" + error.toString());
+        });
     if (list.isNotEmpty) {
-      _updateConversation(
-        conversation.receiver_id,
-        msg: list.first,
-        title: title,
-      );
+      _updateConversation(conversation.receiver_id,
+          msg: list.first, title: title, avatar: avatar);
     } else {
-      _updateConversation(
-        conversation.receiver_id,
-        title: title,
-      );
+      _updateConversation(conversation.receiver_id,
+          title: title, avatar: avatar);
     }
-    return _conversations[conversation.receiver_id]..addAll(list);
+    return _conversations[conversation.receiver_id]
+      ..addAll(list);
   }
 
   void _updateConversation(String id,
-      {Message msg, String title, unread = false}) {
+      {Message msg, String title, String avatar, unread = false}) {
     for (var value in _list) {
       if (value.receiver_id == id) {
         if (msg != null) {
@@ -99,6 +101,10 @@ class ConversationsProvider with ChangeNotifier {
         }
         if (title != null) {
           value.title = title;
+        }
+        if (avatar != null) {
+          log("$id: $avatar");
+          value.avatar = GetIt.instance<AppConfig>().apiHost+avatar;
         }
       }
     }

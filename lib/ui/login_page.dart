@@ -5,9 +5,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/data/conversations_provider.dart';
+import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/ui/home_page.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -99,8 +101,11 @@ class _LoginPageState extends State<LoginPage> {
   _loginButton() {
     return RaisedButton(
         onPressed: () {
-          if (_usernameController.value.text.isEmpty ||
+          if (_usernameController.value.text.trim().length < 2 ||
               _passwordController.value.text.isEmpty) return;
+          if (_passwordController.value.text.contains(" ")) {
+            Fluttertoast.showToast(msg: "密码不能使用空格");
+          }
           _doLogin();
         },
         color: Colors.blue,
@@ -118,28 +123,18 @@ class _LoginPageState extends State<LoginPage> {
     httpManager.POST("/login", data: data, onSuccess: (data) async {
       Chat chat;
       chat = Chat.fromJson(data);
+      Fluttertoast.showToast(msg: chat.msg);
       if (chat.code == 200) {
-        await _saveUserInfo("token", chat.token);
-        await _saveUserInfo("id", chat.data.user.id.toString());
-        await _saveUserInfo("username", chat.data.user.username);
-        GetIt.instance<AppConfig>()
-          ..username = chat.data.user.username
-          ..token = chat.token
-          ..currentUserID = chat.data.user.id;
+        Provider.of<UserInfoProvider>(context, listen: false)
+            .set(chat.data.users.first, token: chat.token);
         provider.reset();
         Navigator.of(context)
             .pushNamedAndRemoveUntil(HomePage.routName, (_) => false);
       }
-    }, onError: (error) {
-      log(error);
+    }, onError: (err) {
+      log(err);
+      Fluttertoast.showToast(msg: err.toString());
     });
-  }
-
-  _saveUserInfo(String key, String value) async {
-    var spf = await SharedPreferences.getInstance();
-    spf.setString(key, value).then((result) => {
-          if (result) {debugPrint("$key 保存成功")} else {debugPrint("$key 保存失败")}
-        });
   }
 
   _usernameInput() {

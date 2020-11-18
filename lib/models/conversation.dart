@@ -10,6 +10,8 @@ class Conversation {
 
   String preview = "";
 
+  String avatar="";
+
   Conversation();
 
   String CreatedAt;

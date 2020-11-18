@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_web/config/app_config.dart';
+import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/ui/home_page.dart';
 import 'package:flutter_web/ui/login_page.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashPage extends StatefulWidget {
@@ -64,6 +66,7 @@ class _SplashPageState extends State<SplashPage>
       chat = Chat.fromJson(data);
       if (chat.code > 0) {
         Navigator.of(context).pushReplacementNamed(HomePage.routName);
+        Provider.of<UserInfoProvider>(context, listen: false).getInfo();
       } else {
         Navigator.of(context).pushReplacementNamed(LoginPage.routName);
       }

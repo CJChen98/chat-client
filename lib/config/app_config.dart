@@ -5,6 +5,7 @@ class AppConfig {
   String currentUserID;
   String username;
   String token;
+  String avatar;
   String get apiHost {
     switch (env) {
       case Enviroment.LOCAL:

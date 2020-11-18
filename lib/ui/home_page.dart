@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
+import 'package:flutter_web/data/user_info_provider.dart';
+import 'package:flutter_web/models/index.dart';
+import 'package:flutter_web/ui/user_info_page.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -214,9 +217,9 @@ class _ConversationListPage extends StatelessWidget {
               },
             );
           },
-          separatorBuilder: (BuildContext context, int index) {
+          separatorBuilder: ( _, __) {
             return Divider(
-              height: 10,
+              height: 1,
               color: Colors.black54,
             );
           },
@@ -249,9 +252,11 @@ class _ConversationItemState extends State<_ConversationItem> {
           child: CircleAvatar(
               minRadius: 10,
               maxRadius: 30,
-              backgroundImage: AssetImage(
-                'assets/images/splash.png',
-              )));
+              backgroundImage: widget.conversation.avatar.isEmpty
+                  ? AssetImage(
+                      'assets/images/splash.png',
+                    )
+                  : NetworkImage(widget.conversation.avatar)));
     }
 
     _detail() {
@@ -306,12 +311,6 @@ class _ConversationItemState extends State<_ConversationItem> {
           widget.conversation.count != 0
               ? Text(widget.conversation.count.toString())
               : Text(""),
-          // Expanded(
-          //   flex: 1,
-          //   child: widget.conversation.count != 0
-          //       ? Text(widget.conversation.count.toString())
-          //       : Text(""),
-          // )
         ]),
       ),
     );
@@ -324,54 +323,28 @@ class _MinePage extends StatefulWidget {
 }
 
 class _MinePageState extends State<_MinePage> {
-  ImageProvider _image = AssetImage('assets/images/splash.png');
-  dynamic _previewImage = AssetImage('assets/images/splash.png');
-  PickedFile _pickedFile;
-  String _progress;
-  Uint8List bytes;
-
-  _pickImg() async {
-    _pickedFile = await ImagePicker.platform
-        .pickImage(source: ImageSource.gallery, maxHeight: 640, maxWidth: 640);
-    _pickedFile.readAsBytes().then((value) {
-      setState(() {
-        bytes = value;
-        _previewImage = MemoryImage(value);
-      });
-    });
-  }
-
-  _pickImageDialog() async {
-    await showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: Text("Pick Image"),
-            content: Column(
-              children: <Widget>[
-                InkWell(onTap: _pickImg, child: Image(image: _previewImage)),
-              ],
-            ),
-            actions: [
-              FlatButton(
-                onPressed: () async {
-                  GetIt.instance<HttpManager>().Upload(_pickedFile, bytes,
-                      query: {"type": "user"},
-                      token: GetIt.instance<AppConfig>().token);
-                },
-                child: Text("Upload"),
-              )
-            ],
-          );
-        });
-  }
-
   _avatar() {
-    return InkWell(
-      onTap: _pickImageDialog,
-      child: Padding(
-          padding: EdgeInsets.all(10),
-          child: CircleAvatar(radius: 45, backgroundImage: _image)),
+    return Selector<UserInfoProvider, User>(
+      shouldRebuild: (odlItem, newItem) => odlItem == newItem,
+      selector: (_, provider) => provider.user,
+      builder: (_, user, __) {
+        return InkWell(
+          onTap: () {
+            Navigator.of(context).pushNamed(UserInfoPage.routName,
+                arguments:user.id);
+          },
+          child: Padding(
+              padding: EdgeInsets.all(10),
+              child: Hero(
+                tag: "avatar",
+                child: CircleAvatar(
+                    radius: 45,
+                    backgroundImage: user.avatar_path.isEmpty
+                        ? AssetImage('assets/images/splash.png')
+                        : NetworkImage(user.avatar_path)),
+              )),
+        );
+      },
     );
   }
 

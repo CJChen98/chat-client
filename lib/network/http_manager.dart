@@ -34,7 +34,7 @@ class HttpManager {
       {String token,
       data,
       query,
-      Function(T) onSuccess,
+      Function(dynamic) onSuccess,
       Function(int count, int total) onSendProgress,
       Function(String error) onError}) async {
     try {
@@ -85,7 +85,7 @@ class HttpManager {
       Function(String error) onError}) async {
     if (kIsWeb) {
       var uri = Uri.parse(GetIt.instance<AppConfig>().apiHost +
-          "/upload?type=${query["type"]}");
+          "/upload?type=${query["type"]}&id=${query["id"] ?? ""}");
       var stream = http.ByteStream(pickedFile.openRead());
       var multipartFile = http.MultipartFile('img', stream, bytes.length,
           filename: "image.png", contentType: MediaType('image', 'png'));
@@ -95,18 +95,18 @@ class HttpManager {
       request.headers["Authorization"] = GetIt.instance<AppConfig>().token;
       var response = await request.send();
       print(response.statusCode);
-      response.stream.transform(utf8.decoder).listen((value) {
+      await response.stream.transform(utf8.decoder).listen((value) {
         print(value);
+        onSuccess(json.decode(value));
       });
     } else {
-      Map<String, dynamic> map = Map();
-      map["img"] = await MultipartFile.fromFile(pickedFile.path,
-          filename: "image.png",
-          contentType: MediaType('image', 'png'));
       POST("/upload",
           token: token,
           query: query,
-          data: map,
+          data: {
+            "img": await MultipartFile.fromFile(pickedFile.path,
+                filename: "image.png", contentType: MediaType('image', 'png'))
+          },
           onSuccess: onSuccess,
           onError: onError);
     }
