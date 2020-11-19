@@ -175,7 +175,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     // if (_pickedFile == null && _inputController.value.text.isEmpty) return;
     if (_pickedFile != null) {
       var bytes = await _pickedFile.readAsBytes();
-      GetIt.instance<HttpManager>().Upload(_pickedFile, bytes,
+      GetIt.instance<HttpManager>().Upload(_pickedFile, bytes,token: _token,
           query: {"type": "message"}, onSuccess: (data) {
         var chat = Chat.fromJson(data);
         if (chat.code == 200) {

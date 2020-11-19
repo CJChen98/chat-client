@@ -93,7 +93,7 @@ class HttpManager {
         var request = http.MultipartRequest("POST", uri);
         request.files.add(multipartFile);
         request.headers["content-type"] = "application/json; charset=utf-8";
-        request.headers["Authorization"] = GetIt.instance<AppConfig>().token;
+        request.headers["Authorization"] = token;
         var response = await request.send();
         print(response.statusCode);
         await response.stream.transform(utf8.decoder).listen((value) {

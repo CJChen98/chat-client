@@ -86,8 +86,7 @@ class _BubbleWidgetState extends State<BubbleWidget> {
         child: Hero(
           tag: widget.tag,
           child: CircleAvatar(
-            minRadius: _width / 40,
-            maxRadius: _width / 25,
+           radius: 22,
             backgroundImage: widget.message.user_avatar.isEmpty
                 ? AssetImage('assets/images/empty.png')
                 : NetworkImage(widget.message.user_avatar),
