@@ -2,13 +2,11 @@ import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_web/config/app_config.dart';
-import 'package:flutter_web/data/conversations_provider.dart';
-import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:flutter_web/ui/big_image_page.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
 import 'package:flutter_web/ui/home_page.dart';
 import 'package:flutter_web/ui/login_page.dart';
@@ -16,6 +14,9 @@ import 'package:flutter_web/ui/splash_page.dart';
 import 'package:flutter_web/ui/user_info_page.dart';
 import 'package:get_it/get_it.dart';
 import 'package:provider/provider.dart';
+
+import 'data/conversations_provider.dart';
+import 'data/user_info_provider.dart';
 
 void main() {
   GetIt.instance.registerSingleton(AppConfig());
@@ -64,7 +65,10 @@ class MyApp extends StatelessWidget {
             ChatDetailPage(ModalRoute.of(context).settings.arguments),
         HomePage.routName: (context) => HomePage(),
         UserInfoPage.routName: (context) => UserInfoPage(
-              uid: ModalRoute.of(context).settings.arguments,
+              args: ModalRoute.of(context).settings.arguments,
+            ),
+        BigImagePage.routName: (context) => BigImagePage(
+              args: ModalRoute.of(context).settings.arguments,
             )
       },
       theme: ThemeData(

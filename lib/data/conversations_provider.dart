@@ -94,7 +94,7 @@ class ConversationsProvider with ChangeNotifier {
     for (var value in _list) {
       if (value.receiver_id == id) {
         if (msg != null) {
-          value.preview = "${msg.username}: ${msg.content}";
+          value.preview = "${msg.username}: ${msg.content}${msg.image_url.isNotEmpty?"[图片]":""}";
           if (unread) {
             value.count++;
           }
@@ -103,7 +103,9 @@ class ConversationsProvider with ChangeNotifier {
           value.title = title;
         }
         if (avatar != null) {
-          value.avatar = GetIt.instance<AppConfig>().apiHost+avatar;
+          value.avatar = GetIt
+              .instance<AppConfig>()
+              .apiHost + avatar;
         }
       }
     }
@@ -133,5 +135,17 @@ class ConversationsProvider with ChangeNotifier {
       _updateConversation(message.receiver_id, msg: message, unread: unread);
       notifyListeners();
     }
+  }
+
+  void updateMessage(String conversation, Message message) {
+    if (_conversations.containsKey(conversation)) {
+      for (var value in _conversations[conversation]) {
+        if (value.ID == message.ID) {
+          value = message;
+          break;
+        }
+      }
+    }
+    notifyListeners();
   }
 }

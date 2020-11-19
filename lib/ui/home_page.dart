@@ -1,24 +1,21 @@
 import 'dart:async';
 import 'dart:developer';
-import 'dart:typed_data';
-import 'package:dio/dio.dart';
-import 'package:flutter_web/data/user_info_provider.dart';
-import 'package:flutter_web/models/index.dart';
-import 'package:flutter_web/ui/user_info_page.dart';
-import 'package:http_parser/http_parser.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
 import 'package:flutter_web/data/conversations_provider.dart';
+import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/models/conversation.dart';
+import 'package:flutter_web/models/index.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/chat_detail.dart';
 import 'package:flutter_web/ui/login_page.dart';
+import 'package:flutter_web/ui/user_info_page.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -148,9 +145,23 @@ class _HomePageState extends State<HomePage> {
       return;
     }
     _socketManager.connectToServer(_token, onSuccess: (message) {
-      var bool = ModalRoute.of(context).isCurrent;
-      log(bool.toString());
-      _conversationsModel.addNewMessage(message, unread: bool);
+      GetIt.instance<HttpManager>().GET("/fetch/",
+          query: {"type": "user", "id": message.user_id},
+          token: _token, onSuccess: (data) {
+        Chat chat = Chat.fromJson(data);
+        if (chat.code == 2002) {
+          var bool = ModalRoute.of(context).isCurrent;
+          _conversationsModel.addNewMessage(
+              message
+                ..user_avatar = GetIt.instance<AppConfig>().apiHost +
+                    chat.data.users.first.avatar_path,
+              unread: bool);
+        }
+      }, onError: (e) {
+        var bool = ModalRoute.of(context).isCurrent;
+        _conversationsModel.addNewMessage(message, unread: bool);
+        log(e.toString());
+      });
     }, onError: () {
       print("ws create failure");
     });
@@ -160,6 +171,12 @@ class _HomePageState extends State<HomePage> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _conversationsModel = Provider.of<ConversationsProvider>(context);
+  }
+
+  @override
+  void dispose() {
+    WebSocketManager.instance.sendMessage("close");
+    super.dispose();
   }
 
   @override
@@ -275,6 +292,7 @@ class _ConversationItemState extends State<_ConversationItem> {
                   fontWeight: FontWeight.w500,
                   fontSize: 16),
               softWrap: false,
+              maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -282,10 +300,11 @@ class _ConversationItemState extends State<_ConversationItem> {
             padding: const EdgeInsets.only(top: 5),
             child: ConstrainedBox(
                 constraints: BoxConstraints(
-                    maxWidth: MediaQuery.of(context).size.width * 0.3),
+                    maxWidth: MediaQuery.of(context).size.width * 0.5),
                 child: Text(
                   widget.conversation.preview.toString(),
                   style: TextStyle(color: Colors.black54),
+                  maxLines: 1,
                   softWrap: false,
                   overflow: TextOverflow.ellipsis,
                 )),
@@ -331,7 +350,7 @@ class _MinePageState extends State<_MinePage> {
         return Padding(
             padding: EdgeInsets.all(10),
             child: Hero(
-              tag: "avatar",
+              tag: user.id,
               child: CircleAvatar(
                   radius: 45,
                   backgroundImage: user.avatar_path.isEmpty
@@ -349,7 +368,7 @@ class _MinePageState extends State<_MinePage> {
         InkWell(
           onTap: () {
             Navigator.of(context).pushNamed(UserInfoPage.routName,
-                arguments: GetIt.instance<AppConfig>().currentUserID);
+                arguments: [GetIt.instance<AppConfig>().currentUserID]);
           },
           child: Row(children: <Widget>[
             _avatar(),

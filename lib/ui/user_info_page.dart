@@ -8,6 +8,7 @@ import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/models/user.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:flutter_web/util/image_picker_util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
 import 'package:image_picker/image_picker.dart';
@@ -16,8 +17,12 @@ import 'package:provider/provider.dart';
 class UserInfoPage extends StatefulWidget {
   static const String routName = "/userinfo";
   String uid;
-
-  UserInfoPage({key, this.uid}) : super(key: key);
+  String tag;
+  List<String> args;
+  UserInfoPage({key, this.args}) : super(key: key){
+    uid=args.first;
+    tag=args.last;
+  }
 
   @override
   State<StatefulWidget> createState() => _UserInfoPageState();
@@ -72,7 +77,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
                       style: TextStyle(color: Colors.white, fontSize: 20),
                     ),
                     background: Hero(
-                        tag: "avatar",
+                        tag: widget.tag,
                         child: InkWell(
                           child: user == null
                               ? Image.asset(
@@ -85,11 +90,11 @@ class _UserInfoPageState extends State<UserInfoPage> {
                                       "${_appConfig.apiHost}${user.avatar_path}",
                                   placeholder: 'assets/images/empty.png',
                                 ),
-                          onTap: () async {
+                          onTap: _appConfig.currentUserID==widget.uid?() async {
                             var result = await _pickImage();
                             Fluttertoast.showToast(
                                 msg: "${result ? "上传成功" : "上传失败"}");
-                          },
+                          }:null,
                         )),
                   ),
                 )
@@ -127,11 +132,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
       return result;
     }
 
-    final pickedFile = await ImagePicker.platform.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 640,
-      maxHeight: 640,
-    );
+    final pickedFile = await ImagePickerUtil.pick();
     final Uint8List bytes = await pickedFile.readAsBytes();
     return await _upload(pickedFile, bytes);
   }

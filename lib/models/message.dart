@@ -5,7 +5,7 @@ part 'message.g.dart';
 @JsonSerializable()
 class Message {
     Message();
-
+    String user_avatar="";
     String CreatedAt;
     String UpdatedAt;
     String DeletedAt;

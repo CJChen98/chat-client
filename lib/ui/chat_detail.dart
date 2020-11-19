@@ -13,7 +13,9 @@ import 'package:flutter_web/models/message.dart';
 import 'package:flutter_web/network/http_manager.dart';
 import 'package:flutter_web/network/websocket_manager.dart';
 import 'package:flutter_web/ui/widget/bubble_widget.dart';
+import 'package:flutter_web/util/image_picker_util.dart';
 import 'package:get_it/get_it.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -81,6 +83,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
   @override
   void dispose() {
+    _pickedFile = null;
     super.dispose();
   }
 
@@ -110,6 +113,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
+  PickedFile _pickedFile;
+
   _inputToolBar() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -119,7 +124,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           icon: Icon(Icons.mic, color: Colors.blue),
         ),
         IconButton(
-          onPressed: () {},
+          onPressed: () {
+            setState(() {
+              ImagePickerUtil.pick().then((value) {
+                _pickedFile = value;
+              });
+            });
+          },
           icon: Icon(Icons.image, color: Colors.blue),
         ),
         IconButton(
@@ -153,27 +164,52 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           controller: _inputController,
         )),
         IconButton(
-          onPressed: () {
-            if (_inputController.value.text.isEmpty) {
-              return;
-            }
-            var message = Message()
-              ..username = _username
-              ..content = _inputController.value.text
-              ..conversation_id = widget.conversation.ID
-              ..receiver_id = widget.conversation.receiver_id
-              ..user_id = _userID;
-            try {
-              WebSocketManager.instance.sendMessage(json.encode(message));
-            } catch (e) {
-              log(e.toString());
-            }
-            _inputController.clear();
-          },
+          onPressed: _uploadAndSendMessage,
           icon: Icon(Icons.send),
         )
       ],
     );
+  }
+
+  _uploadAndSendMessage() async {
+    // if (_pickedFile == null && _inputController.value.text.isEmpty) return;
+    if (_pickedFile != null) {
+      var bytes = await _pickedFile.readAsBytes();
+      GetIt.instance<HttpManager>().Upload(_pickedFile, bytes,
+          query: {"type": "message"}, onSuccess: (data) {
+        var chat = Chat.fromJson(data);
+        if (chat.code == 200) {
+          _sendMessage(imgUrl: chat.msg);
+          setState(() {
+            _pickedFile = null;
+          });
+        }
+      }, onError: (e) {
+        log(e.toString());
+        setState(() {
+          _pickedFile = null;
+        });
+      });
+    } else {
+      _sendMessage();
+    }
+  }
+
+  _sendMessage({imgUrl = ""}) {
+    var message = Message()
+      ..username = _username
+      ..content = _inputController.value.text ?? ""
+      ..conversation_id = widget.conversation.ID
+      ..receiver_id = widget.conversation.receiver_id
+      ..user_id = _userID
+      ..image_url = imgUrl;
+    try {
+      var msg = json.encode(message);
+      WebSocketManager.instance.sendMessage(msg);
+    } catch (e) {
+      log(e.toString());
+    }
+    _inputController.clear();
   }
 
   _messageListView() {
@@ -193,7 +229,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 selector: (_, provider) =>
                     provider.value[widget.conversation.receiver_id][index],
                 builder: (_, message, __) {
-                  return BubbleWidget(message);
+                  return BubbleWidget(message, "index$index");
                 },
               );
             },

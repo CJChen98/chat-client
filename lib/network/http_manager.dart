@@ -54,12 +54,12 @@ class HttpManager {
     }
   }
 
-  GET<T>(String path,
+  GET(String path,
       {String token,
       query,
       data,
-      Function(T) onSuccess,
-      Function(String error) onError}) async {
+      Function(dynamic) onSuccess,
+      Function(dynamic) onError}) async {
     try {
       Response response = await _dio.get(path,
           queryParameters: query,
@@ -104,7 +104,7 @@ class HttpManager {
         if (onError != null) onError(e);
       }
     } else {
-     await POST("/upload",
+      await POST("/upload",
           token: token,
           query: query,
           data: {
