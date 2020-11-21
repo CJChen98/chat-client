@@ -4,24 +4,23 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
-import 'package:flutter_web/data/user_info_provider.dart';
 import 'package:flutter_web/models/chat.dart';
 import 'package:flutter_web/models/user.dart';
 import 'package:flutter_web/network/http_manager.dart';
+import 'package:flutter_web/ui/image_edit_page.dart';
 import 'package:flutter_web/util/image_picker_util.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get_it/get_it.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 
 class UserInfoPage extends StatefulWidget {
   static const String routName = "/userinfo";
   String uid;
   String tag;
   List<String> args;
-  UserInfoPage({key, this.args}) : super(key: key){
-    uid=args.first;
-    tag=args.last;
+
+  UserInfoPage({key, this.args}) : super(key: key) {
+    uid = args.first;
+    tag = args.last;
   }
 
   @override
@@ -90,11 +89,17 @@ class _UserInfoPageState extends State<UserInfoPage> {
                                       "${_appConfig.apiHost}${user.avatar_path}",
                                   placeholder: 'assets/images/empty.png',
                                 ),
-                          onTap: _appConfig.currentUserID==widget.uid?() async {
-                            var result = await _pickImage();
-                            Fluttertoast.showToast(
-                                msg: "${result ? "上传成功" : "上传失败"}");
-                          }:null,
+                          onTap: _appConfig.currentUserID == widget.uid
+                              ? () async {
+                                  Uint8List result = await _pickImage();
+                                  var url = await Navigator.of(context)
+                                      .pushNamed(ImageEditPage.routName,
+                                          arguments: result);
+                                  setState(() {
+                                    user..avatar_path=url;
+                                  });
+                                }
+                              : null,
                         )),
                   ),
                 )
@@ -112,28 +117,8 @@ class _UserInfoPageState extends State<UserInfoPage> {
   }
 
   _pickImage() async {
-    Future<bool> _upload(PickedFile pickedFile, List<int> bytes) async {
-      var result = false;
-      await GetIt.instance<HttpManager>().Upload(pickedFile, bytes,
-          query: {"type": "user"},
-          token: GetIt.instance<AppConfig>().token, onSuccess: (data) {
-        Chat chat = Chat.fromJson(data);
-        if (chat.code == 200) {
-          result = true;
-          var p = Provider.of<UserInfoProvider>(context, listen: false);
-          p.set(p.user..avatar_path = chat.msg);
-          setState(() {
-            user.avatar_path = chat.msg;
-          });
-        }
-      }, onError: (e) {
-        log(e);
-      });
-      return result;
-    }
-
     final pickedFile = await ImagePickerUtil.pick();
     final Uint8List bytes = await pickedFile.readAsBytes();
-    return await _upload(pickedFile, bytes);
+    return bytes;
   }
 }

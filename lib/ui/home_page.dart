@@ -364,6 +364,7 @@ class _MinePageState extends State<_MinePage> {
   @override
   Widget build(BuildContext context) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         InkWell(
           onTap: () {
@@ -377,12 +378,15 @@ class _MinePageState extends State<_MinePage> {
             )
           ]),
         ),
-        RaisedButton(
-          child: Text("退出登录"),
-          color: Colors.redAccent,
-          onPressed: () {
-            Navigator.of(context).pushNamed(LoginPage.routName);
-          },
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: RaisedButton(
+            child: Text("退出登录"),
+            color: Colors.redAccent,
+            onPressed: () {
+              Navigator.of(context).pushNamed(LoginPage.routName);
+            },
+          ),
         )
       ],
     );

@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:ui';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web/config/app_config.dart';
@@ -86,10 +87,10 @@ class _BubbleWidgetState extends State<BubbleWidget> {
         child: Hero(
           tag: widget.tag,
           child: CircleAvatar(
-           radius: 22,
+            radius: 22,
             backgroundImage: widget.message.user_avatar.isEmpty
                 ? AssetImage('assets/images/empty.png')
-                : NetworkImage(widget.message.user_avatar),
+                : CachedNetworkImageProvider(widget.message.user_avatar),
           ),
         ),
       ),
@@ -159,12 +160,16 @@ class _BubbleWidgetState extends State<BubbleWidget> {
           child: Hero(
             tag: "img-" + widget.tag,
             child: ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(10)),
-              child: Image.network(
-                _appConfig.apiHost + widget.message.image_url,
-                fit: BoxFit.fitWidth,
-              ),
-            ),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                child: CachedNetworkImage(
+                  imageUrl: _appConfig.apiHost + widget.message.image_url,
+                  progressIndicatorBuilder: (context, url, downloadProgress) =>
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: CircularProgressIndicator(
+                            value: downloadProgress.progress),
+                      ),
+                )),
           ),
         ),
       ));

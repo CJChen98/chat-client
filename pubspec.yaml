@@ -21,6 +21,12 @@ environment:
   sdk: ">=2.7.0 <3.0.0"
 
 dependencies:
+  flutter_image_compress: ^0.7.0
+  isolate: any
+  image_editor: any
+  image: any
+  extended_image: any
+  cached_network_image: ^2.3.3
   provider: ^4.3.2+2
   image_picker: ^0.6.7+14
   image_picker_for_web: ^0.1.0+2
