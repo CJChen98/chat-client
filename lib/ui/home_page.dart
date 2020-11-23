@@ -175,7 +175,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    WebSocketManager.instance.sendMessage("close");
+    // WebSocketManager.instance.sendMessage("close");
     super.dispose();
   }
 
